@@ -1,0 +1,3 @@
+[dev]
+  port = 3000
+  envFiles = [".env.netlify"]

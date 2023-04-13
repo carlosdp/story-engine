@@ -1,0 +1,7 @@
+dist
+**/node_modules
+contracts
+generated
+data
+!.storybook
+!.lint-staged.config.js
