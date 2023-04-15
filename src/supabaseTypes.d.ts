@@ -312,7 +312,25 @@ export interface Database {
       };
     };
     Functions: {
-      [_ in never]: never;
+      related_characters: {
+        Args: {
+          p_character_id: string;
+        };
+        Returns: {
+          id: string;
+          rust_npc_type: string;
+          first_name: string;
+          last_name: string;
+          title: string;
+          backstory: string;
+          personality: string;
+          writing_style: string;
+          created_at: string;
+          updated_at: string;
+          relationship_type: string;
+          description_of_interactions: string;
+        }[];
+      };
     };
     Enums: {
       job_state: 'created' | 'retry' | 'active' | 'completed' | 'expired' | 'cancelled' | 'failed';

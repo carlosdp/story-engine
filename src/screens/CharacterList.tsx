@@ -30,7 +30,11 @@ export const CharacterList = () => {
         <Tbody>
           {characters?.map(character => (
             <Tr key={character.id}>
-              <Td>{`${character.title ? character.title + ' ' : ''}${character.first_name} ${character.last_name}`}</Td>
+              <Td>
+                <Link to={`/characters/${character.id}`}>{`${character.title ? character.title + ' ' : ''}${
+                  character.first_name
+                } ${character.last_name}`}</Link>
+              </Td>
               <Td>
                 <Badge colorScheme="red">{character.rust_npc_type}</Badge>
               </Td>
