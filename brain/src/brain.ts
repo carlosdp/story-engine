@@ -128,28 +128,28 @@ boss.work('generate-characters', async (job: Job<GenerateCharactersJob>) => {
 
     for (let i = 0; i < numberOfRelationshipsToGenerate; i++) {
       const characterPairRes = await sql`
-        WITH random_characters AS (
-          SELECT * FROM characters
-          WHERE rust_npc_type = ${job.data.rustNpcType}
+        WITH unrelated_character_pairs AS (
+          SELECT c1.id AS character_1_id, c2.id AS character_2_id
+          FROM characters c1
+          JOIN characters c2 ON c1.id < c2.id
+          WHERE c1.rust_npc_type = ${job.data.rustNpcType}
+            AND c2.rust_npc_type = ${job.data.rustNpcType}
+            AND NOT EXISTS (
+              SELECT 1
+              FROM character_relationships cr
+              WHERE (cr.character_id = c1.id AND cr.related_character_id = c2.id)
+                 OR (cr.character_id = c2.id AND cr.related_character_id = c1.id)
+            )
+        ), random_unrelated_pair AS (
+          SELECT *
+          FROM unrelated_character_pairs
           ORDER BY RANDOM()
-          LIMIT 2
-        ), character_1 AS (
-          SELECT * FROM random_characters
-          LIMIT 1
-        ), character_2 AS (
-          SELECT * FROM random_characters
-          OFFSET 1
           LIMIT 1
         )
-        SELECT * FROM character_1
-        UNION ALL
-        SELECT * FROM character_2
-        WHERE NOT EXISTS (
-          SELECT 1
-          FROM character_relationships cr, character_1 c1
-          WHERE (cr.character_id = c1.id AND cr.related_character_id = character_2.id)
-             OR (cr.character_id = character_2.id AND cr.related_character_id = c1.id)
-        );
+        SELECT c.*
+        FROM characters c
+        JOIN random_unrelated_pair rup
+        ON c.id = rup.character_1_id OR c.id = rup.character_2_id;
       `;
 
       if (characterPairRes.length !== 2) {

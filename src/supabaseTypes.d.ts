@@ -96,6 +96,35 @@ export interface Database {
           state?: Database['public']['Enums']['job_state'];
         };
       };
+      character_relationships: {
+        Row: {
+          character_id: string;
+          created_at: string;
+          description_of_interactions: string;
+          id: string;
+          related_character_id: string;
+          relationship_type: string;
+          updated_at: string;
+        };
+        Insert: {
+          character_id: string;
+          created_at?: string;
+          description_of_interactions: string;
+          id?: string;
+          related_character_id: string;
+          relationship_type: string;
+          updated_at?: string;
+        };
+        Update: {
+          character_id?: string;
+          created_at?: string;
+          description_of_interactions?: string;
+          id?: string;
+          related_character_id?: string;
+          relationship_type?: string;
+          updated_at?: string;
+        };
+      };
       characters: {
         Row: {
           backstory: string;

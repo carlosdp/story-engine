@@ -3,9 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
+    "dev": "netlify dev",
+    "dev:vite": "vite",
     "build": "tsc && vite build",
     "build:brain": "cd brain && tsc",
+    "run:brain": "node brain/dist/src/brain.js",
     "preview": "vite preview",
     "lint": "eslint --max-warnings 0 \"**/*.{ts,tsx,js,jsx}\"",
     "fix": "eslint --max-warnings 0 --fix \"**/*.{ts,tsx,js,jsx}\"",
@@ -26,6 +28,8 @@
     "postgres": "^3.3.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-hook-form": "^7.43.9",
+    "react-query": "^3.39.3",
     "react-router-dom": "^6",
     "react-supabase": "^0.2.0"
   },

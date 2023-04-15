@@ -103,3 +103,6 @@ generated/
 # but just ignore it for now
 packages/subgraphs/contracts/
 docs/api
+
+# Local Netlify folder
+.netlify

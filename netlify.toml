@@ -1,3 +1,4 @@
 [dev]
+  command = "yarn dev:vite"
   port = 3000
   envFiles = [".env.netlify"]

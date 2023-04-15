@@ -1,9 +1,11 @@
 import { AuthUser, SupabaseClient } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-type User = AuthUser & { is_staff: boolean };
+import { Database } from './supabaseTypes';
+
+type User = AuthUser;
 type SupabaseContextProps = {
-  client: SupabaseClient;
+  client: SupabaseClient<Database>;
   logout: () => void;
   user?: User | null;
 };
@@ -11,7 +13,7 @@ type SupabaseContextProps = {
 const SupabaseContext = createContext<SupabaseContextProps>(null!);
 
 export type SupabaseProviderProps = {
-  client: SupabaseClient;
+  client: SupabaseClient<Database>;
   children: React.ReactNode | React.ReactNode[];
 };
 
@@ -28,7 +30,7 @@ export const SupabaseProvider = ({ client, children }: SupabaseProviderProps) =>
               .select('*')
               .eq('id', res.data.user.id)
               .single()
-              .then(resu => setUser({ ...res.data.user, ...resu.data }))
+              .then(resu => setUser({ ...res.data.user, ...resu.data } as User))
           : setUser(res.data.user)
       )
       .catch(console.error);
@@ -41,7 +43,7 @@ export const SupabaseProvider = ({ client, children }: SupabaseProviderProps) =>
           .select('*')
           .eq('id', session!.user!.id)
           .single()
-          .then(resu => setUser({ ...session!.user!, ...resu.data }));
+          .then(resu => setUser({ ...session!.user!, ...resu.data } as User));
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
