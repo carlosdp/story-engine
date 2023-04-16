@@ -24,8 +24,10 @@ export const CharacterList = () => {
       </Box>
       <Table>
         <Thead>
-          <Th>Name</Th>
-          <Th>Type</Th>
+          <Tr>
+            <Th>Name</Th>
+            <Th>Type</Th>
+          </Tr>
         </Thead>
         <Tbody>
           {characters?.map(character => (

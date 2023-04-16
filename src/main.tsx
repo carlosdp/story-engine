@@ -11,7 +11,7 @@ import { Database } from './supabaseTypes';
 import { theme } from './theme';
 
 const client = new SupabaseClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.DEV ? `${window.location.origin}/supabase` : import.meta.env.VITE_SUPABASE_URL!,
   import.meta.env.VITE_SUPABASE_ANON_KEY!
 );
 const queryClient = new QueryClient();

@@ -79,9 +79,11 @@ export const CharacterDetail = () => {
           <Heading size="md">Relationships</Heading>
           <Table>
             <Thead>
-              <Th>Name</Th>
-              <Th>Relationship</Th>
-              <Th>Interaction Details</Th>
+              <Tr>
+                <Th>Name</Th>
+                <Th>Relationship</Th>
+                <Th>Interaction Details</Th>
+              </Tr>
             </Thead>
             <Tbody>
               {relatedCharacters?.map(relatedCharacter => (

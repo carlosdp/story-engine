@@ -13,4 +13,13 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
   },
+  server: {
+    proxy: {
+      '/supabase': {
+        target: 'http://localhost:54321',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/supabase/, ''),
+      },
+    },
+  },
 });
