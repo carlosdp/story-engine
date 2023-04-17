@@ -22,12 +22,38 @@ export abstract class Action {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  abstract execute(thoughtProcessId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult>;
+  abstract execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  abstract result(thoughtProcessId: string, parameters: Record<string, unknown>, data: any): Promise<string>;
+  abstract result(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<string>;
 
   serializeDefinition() {
     return `${this.name}: ${this.description}. Parameters: ${JSON.stringify(this.parameters)}`;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected async sendSignal(thoughtActionId: string, subsystem: string, payload: any) {
+    const messageRes = await sql`insert into messages ${sql({
+      type: 'command',
+      direction: 'out',
+      from_action_id: thoughtActionId,
+      subsystem,
+      payload,
+    })} returning id`;
+    return messageRes[0].id;
+  }
+
+  protected async getSignalResponse(messageId: string) {
+    const messageRes =
+      await sql`select * from messages where direction = 'in' and response_to = ${messageId} and acknowledged_at is null`;
+    const message = messageRes[0];
+
+    if (!message) {
+      return null;
+    }
+
+    await sql`update messages set acknowledged_at = now() where id = ${message.id}`;
+
+    return message.payload;
   }
 }

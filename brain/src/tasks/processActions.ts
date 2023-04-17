@@ -1,9 +1,11 @@
+import { Job } from 'pg-boss';
+
 import { sql } from '../db';
 import logger from '../logging';
 import subsystems from '../subsystems';
 
-export default async () => {
-  logger.debug('Checking for actions');
+export default async (job: Job) => {
+  logger.debug(`Checking for actions, ${job.id}`);
 
   const processActions =
     await sql`select * from thought_process_actions where status = 'waiting' or status = 'pending'`;
@@ -28,11 +30,11 @@ export default async () => {
       continue;
     }
 
-    const actionResult = await action.execute(
-      processAction.thought_process_id,
-      processAction.parameters,
-      processAction.data
-    );
+    logger.debug('Executing action');
+
+    const actionResult = await action.execute(processAction.id, processAction.parameters, processAction.data);
+
+    logger.debug(`Action result: ${JSON.stringify(actionResult)} ${actionResult.status}`);
 
     if (actionResult.status === 'failed') {
       logger.error(`Action failed: ${processAction.action}`);
