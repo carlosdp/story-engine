@@ -40,7 +40,7 @@ export const GenerateCharacters = () => {
   const onSubmit: SubmitHandler<CharacterJob> = useCallback(
     async data => {
       await create({
-        name: 'generate-characters',
+        name: 'generateCharacters',
         data: {
           count: data.count,
           rustNpcType: data.rustNpcType,

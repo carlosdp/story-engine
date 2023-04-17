@@ -1,10 +1,11 @@
 import { boss } from '../db';
+import logger from '../logging';
 
 (async () => {
-  console.log('Generating characters...');
+  logger.info('Generating characters...');
   await boss.start();
-  console.log(
-    await boss.send('generate-characters', {
+  logger.debug(
+    await boss.send('generateCharacters', {
       prompt: 'A research scientist, working for the AI overlord',
       rustNpcType: 'scientist',
       count: 1,
