@@ -228,6 +228,47 @@ export interface Database {
           state?: Database['public']['Enums']['job_state'];
         };
       };
+      messages: {
+        Row: {
+          acknowledged_at: string | null;
+          created_at: string;
+          direction: Database['public']['Enums']['direction'];
+          from_action_id: string | null;
+          from_subsystem: string | null;
+          id: string;
+          payload: Json;
+          response_to: string | null;
+          subsystem: string;
+          type: Database['public']['Enums']['message_type'];
+          updated_at: string;
+        };
+        Insert: {
+          acknowledged_at?: string | null;
+          created_at?: string;
+          direction: Database['public']['Enums']['direction'];
+          from_action_id?: string | null;
+          from_subsystem?: string | null;
+          id?: string;
+          payload: Json;
+          response_to?: string | null;
+          subsystem: string;
+          type: Database['public']['Enums']['message_type'];
+          updated_at?: string;
+        };
+        Update: {
+          acknowledged_at?: string | null;
+          created_at?: string;
+          direction?: Database['public']['Enums']['direction'];
+          from_action_id?: string | null;
+          from_subsystem?: string | null;
+          id?: string;
+          payload?: Json;
+          response_to?: string | null;
+          subsystem?: string;
+          type?: Database['public']['Enums']['message_type'];
+          updated_at?: string;
+        };
+      };
       schedule: {
         Row: {
           created_on: string;
@@ -277,6 +318,64 @@ export interface Database {
           updated_on?: string;
         };
       };
+      thought_process_actions: {
+        Row: {
+          action: string;
+          created_at: string;
+          data: Json | null;
+          id: string;
+          parameters: Json;
+          result: string | null;
+          status: Database['public']['Enums']['action_status'];
+          thought_process_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          action: string;
+          created_at?: string;
+          data?: Json | null;
+          id?: string;
+          parameters: Json;
+          result?: string | null;
+          status?: Database['public']['Enums']['action_status'];
+          thought_process_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          action?: string;
+          created_at?: string;
+          data?: Json | null;
+          id?: string;
+          parameters?: Json;
+          result?: string | null;
+          status?: Database['public']['Enums']['action_status'];
+          thought_process_id?: string | null;
+          updated_at?: string;
+        };
+      };
+      thought_processes: {
+        Row: {
+          created_at: string;
+          id: string;
+          messages: Json;
+          subsystem: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          messages: Json;
+          subsystem: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          messages?: Json;
+          subsystem?: string;
+          updated_at?: string;
+        };
+      };
       version: {
         Row: {
           cron_on: string | null;
@@ -296,6 +395,47 @@ export interface Database {
       };
     };
     Views: {
+      queued_messages: {
+        Row: {
+          acknowledged_at: string | null;
+          created_at: string | null;
+          direction: Database['public']['Enums']['direction'] | null;
+          from_action_id: string | null;
+          from_subsystem: string | null;
+          id: string | null;
+          payload: Json | null;
+          response_to: string | null;
+          subsystem: string | null;
+          type: Database['public']['Enums']['message_type'] | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          acknowledged_at?: string | null;
+          created_at?: string | null;
+          direction?: Database['public']['Enums']['direction'] | null;
+          from_action_id?: string | null;
+          from_subsystem?: string | null;
+          id?: string | null;
+          payload?: Json | null;
+          response_to?: string | null;
+          subsystem?: string | null;
+          type?: Database['public']['Enums']['message_type'] | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          acknowledged_at?: string | null;
+          created_at?: string | null;
+          direction?: Database['public']['Enums']['direction'] | null;
+          from_action_id?: string | null;
+          from_subsystem?: string | null;
+          id?: string | null;
+          payload?: Json | null;
+          response_to?: string | null;
+          subsystem?: string | null;
+          type?: Database['public']['Enums']['message_type'] | null;
+          updated_at?: string | null;
+        };
+      };
       users: {
         Row: {
           email: string | null;
@@ -312,6 +452,12 @@ export interface Database {
       };
     };
     Functions: {
+      acknowledge_messages: {
+        Args: {
+          ids: string[];
+        };
+        Returns: undefined;
+      };
       related_characters: {
         Args: {
           p_character_id: string;
@@ -333,7 +479,10 @@ export interface Database {
       };
     };
     Enums: {
+      action_status: 'pending' | 'waiting' | 'complete' | 'failed';
+      direction: 'in' | 'out';
       job_state: 'created' | 'retry' | 'active' | 'completed' | 'expired' | 'cancelled' | 'failed';
+      message_type: 'command' | 'response' | 'signal' | 'communication';
     };
     CompositeTypes: {
       [_ in never]: never;

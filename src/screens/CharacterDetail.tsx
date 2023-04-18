@@ -1,5 +1,8 @@
 import {
   Badge,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
   Center,
   Divider,
   Flex,
@@ -38,6 +41,19 @@ export const CharacterDetail = () => {
   return (
     <PageContainer>
       <Flex flexDirection="column" gap="32px">
+        <Breadcrumb>
+          <BreadcrumbItem>
+            <BreadcrumbLink as={Link} to="/characters">
+              Characters
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbItem>
+            <Text fontWeight="bold">
+              {character.title ? character.title + ' ' : ''}
+              {character.first_name} {character.last_name}
+            </Text>
+          </BreadcrumbItem>
+        </Breadcrumb>
         <Heading>
           {character.title ? character.title + ' ' : ''}
           {character.first_name} {character.last_name}
