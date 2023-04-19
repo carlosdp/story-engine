@@ -19,7 +19,7 @@ export const ThoughtProcesses = () => {
   return (
     <PageContainer>
       <Box>
-        <Button as={Link} to="/mock-signal">
+        <Button as={Link} to="/send-signals">
           Mock Signal
         </Button>
       </Box>

@@ -3,6 +3,8 @@ create type message_type as enum ('command', 'response', 'signal', 'communicatio
 
 create table thought_processes (
   id uuid primary key default gen_random_uuid(),
+  initiating_message_id uuid not null,
+  parent_thought_process_id uuid references thought_processes(id),
   subsystem varchar not null,
   messages jsonb not null,
   created_at timestamp with time zone not null default now(),

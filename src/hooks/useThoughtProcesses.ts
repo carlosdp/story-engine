@@ -8,7 +8,10 @@ export const useThoughtProcesses = () => {
   return useQuery({
     queryKey: ['thought_processes'],
     queryFn: async () => {
-      const { data, error } = await client.from('thought_processes').select('*');
+      const { data, error } = await client
+        .from('thought_processes')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) {
         throw new Error(error.message);
       }

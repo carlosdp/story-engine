@@ -31,7 +31,17 @@ export abstract class Subsystem {
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
     ];
 
+    let parentThoughtProcessId: string | null = null;
+
+    if (message.from_action_id) {
+      const actionRes = await sql`select * from thought_process_actions where id = ${message.from_action_id}`;
+      const action = actionRes[0];
+      parentThoughtProcessId = action.thought_process_id;
+    }
+
     const thoughtProcessRes = await sql`insert into thought_processes ${sql({
+      initiating_message_id: message.id,
+      parent_thought_process_id: parentThoughtProcessId,
       subsystem: this.name,
       messages: startingMessages,
     })} returning id`;
@@ -85,6 +95,8 @@ export abstract class Subsystem {
       0.4
     );
     logger.debug(response.content);
+
+    messages.push(response);
 
     await sql`update thought_processes set messages = ${messages} where id = ${thoughtProcessId}`;
 

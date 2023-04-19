@@ -5,6 +5,7 @@ import { PageContainer } from './components/PageContainer';
 import { CharacterDetail } from './screens/CharacterDetail';
 import { CharacterList } from './screens/CharacterList';
 import { GenerateCharacters } from './screens/GenerateCharacters';
+import { MockSignals } from './screens/MockSignals';
 import { ThoughtProcessDetails } from './screens/ThoughtProcessDetails';
 import { ThoughtProcesses } from './screens/ThoughtProcesses';
 
@@ -39,6 +40,7 @@ function App() {
         <Route path="/characters/:id" element={<CharacterDetail />} />
         <Route path="/thought_processes" element={<ThoughtProcesses />} />
         <Route path="/thought_processes/:id" element={<ThoughtProcessDetails />} />
+        <Route path="/send-signals" element={<MockSignals />} />
       </Routes>
     </Box>
   );

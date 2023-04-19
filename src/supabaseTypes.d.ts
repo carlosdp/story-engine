@@ -357,21 +357,27 @@ export interface Database {
         Row: {
           created_at: string;
           id: string;
+          initiating_message_id: string;
           messages: Json;
+          parent_thought_process_id: string | null;
           subsystem: string;
           updated_at: string;
         };
         Insert: {
           created_at?: string;
           id?: string;
+          initiating_message_id: string;
           messages: Json;
+          parent_thought_process_id?: string | null;
           subsystem: string;
           updated_at?: string;
         };
         Update: {
           created_at?: string;
           id?: string;
+          initiating_message_id?: string;
           messages?: Json;
+          parent_thought_process_id?: string | null;
           subsystem?: string;
           updated_at?: string;
         };

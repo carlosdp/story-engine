@@ -31,11 +31,18 @@ export abstract class Action {
     return `${this.name}: ${this.description}. Parameters: ${JSON.stringify(this.parameters)}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected async sendSignal(thoughtActionId: string, subsystem: string, payload: any) {
+  protected async sendSignal(
+    thoughtActionId: string,
+    direction: 'in' | 'out',
+    subsystem: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    payload: any,
+    from_subsystem: string | null = null
+  ) {
     const messageRes = await sql`insert into messages ${sql({
       type: 'command',
-      direction: 'out',
+      direction,
+      from_subsystem,
       from_action_id: thoughtActionId,
       subsystem,
       payload,
@@ -55,5 +62,45 @@ export abstract class Action {
     await sql`update messages set acknowledged_at = now() where id = ${message.id}`;
 
     return message.payload;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SignalActionPayload = any;
+
+export abstract class SignalAction extends Action {
+  from_subsystem: string | null = null;
+  abstract subsystem: string;
+  abstract direction: 'in' | 'out';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  abstract payload(parameters: Record<string, unknown>): Promise<SignalActionPayload>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  abstract responseToResult(parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string>;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
+    if (!data?.messageId) {
+      const messageId = await this.sendSignal(
+        thoughtActionId,
+        this.direction,
+        this.subsystem,
+        await this.payload(parameters),
+        this.from_subsystem
+      );
+      return { status: Action.STATUS_WAITING, data: { messageId } };
+    } else {
+      const response = await this.getSignalResponse(data.messageId);
+      if (response === null) {
+        return { status: Action.STATUS_WAITING, data };
+      }
+
+      return { status: Action.STATUS_COMPLETE, data: { ...data, responsePayload: response } };
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async result(_thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<string> {
+    return this.responseToResult(parameters, data.responsePayload);
   }
 }
