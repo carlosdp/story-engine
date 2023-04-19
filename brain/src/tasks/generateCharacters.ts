@@ -6,11 +6,101 @@ import logger from '../logging';
 import { message } from '../utils';
 
 const AVG_NUMBER_OF_RELATIONSHIPS = 3;
+const COUNTRIES = [
+  'United States',
+  'Canada',
+  'Mexico',
+  'United Kingdom',
+  'France',
+  'Germany',
+  'Italy',
+  'Spain',
+  'Russia',
+  'China',
+  'Japan',
+  'India',
+  'Brazil',
+  'Australia',
+  'Argentina',
+  'Nigeria',
+  'South Africa',
+  'Egypt',
+  'Saudi Arabia',
+  'Iran',
+  'Turkey',
+  'Indonesia',
+  'Pakistan',
+  'Bangladesh',
+  'Philippines',
+  'Ukraine',
+  'Thailand',
+  'Vietnam',
+  'Myanmar',
+  'South Korea',
+  'Afghanistan',
+  'Morocco',
+  'Colombia',
+  'Algeria',
+  'Sudan',
+  'Uzbekistan',
+  'Peru',
+  'Angola',
+  'Mali',
+  'Mozambique',
+  'Ghana',
+  'Yemen',
+  'Nepal',
+  'Venezuela',
+  'Madagascar',
+  'Cameroon',
+  'North Korea',
+  'Australia',
+  'Taiwan',
+  'Sri Lanka',
+  'Burkina Faso',
+  'Malaysia',
+  'Mauritania',
+  'Chile',
+  'Kazakhstan',
+  'Zambia',
+  'Guatemala',
+  'Ecuador',
+  'Netherlands',
+  'Syria',
+  'Senegal',
+  'Cambodia',
+  'Chad',
+  'Somalia',
+  'Zimbabwe',
+  'Rwanda',
+  'Guinea',
+  'Benin',
+  'Tunisia',
+  'Bolivia',
+  'Belgium',
+  'Haiti',
+  'Cuba',
+  'South Sudan',
+  'Dominican Republic',
+  'Czech Republic',
+  'Greece',
+  'Portugal',
+  'Jordan',
+  'Azerbaijan',
+  'Sweden',
+  'United Arab Emirates',
+  'Hungary',
+  'Belarus',
+  'Tajikistan',
+  'Austria',
+];
 
 export default async (job: Job<GenerateCharactersJob>) => {
   logger.debug('generate-characters job', job);
 
   for (let i = 0; i < job.data.count; i++) {
+    const randomCountry = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+    const randomGender = Math.random() > 0.5 ? 'Male' : 'Female';
     const response = await message(
       job.data.model ?? 'gpt-3.5-turbo',
       [
@@ -19,6 +109,9 @@ export default async (job: Job<GenerateCharactersJob>) => {
           content: `You are an expert character designer for a video game.
 
       Game Description: A survival game where hundreds of players play against an AI overlord that commands an army of bandits, army scientists, and drones on an island.
+
+      Character Origin: ${randomCountry}
+      Character Gender: ${randomGender}
       
       When the user gives you the type of character they need, respond with a character definition with these JSON fields:
       title: Mr or Mrs or Dr, etc. can also be null

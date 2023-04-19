@@ -54,7 +54,7 @@ export const GenerateCharacters = () => {
         duration: 9000,
         isClosable: true,
       });
-      navigate('/');
+      navigate('/characters');
     },
     [create, toast, navigate]
   );
