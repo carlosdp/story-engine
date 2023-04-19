@@ -1,11 +1,11 @@
 import { Action } from '../action';
 import { Subsystem } from './base';
 
+// - Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
 const BASE_PROMPT = `You are the Military subordinate function of a super intelligent AI that controls a remote island using a combination of drones, scientists, and bandits.
 
 - When the Overlord asks you for information, collect the data necessary and respond
 - When the Overlord gives you an order, carry it out and then inform them
-- Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
 - When giving the Overlord recommendations, make sure to mention the resource cost
 - If a mission fails, inform the Overlord immediately
 
@@ -38,7 +38,7 @@ class CheckExistingMilitaryAssets extends Action {
   name = 'check-existing-military-assets';
   description = 'Check for existing military assets near coordinates';
   parameters = {
-    coordinates: { type: 'array', description: 'The coordinates to check, as a tuple of integers' },
+    coordinates: { type: 'array', description: 'The coordinates to check, as an x,y,z tuple of integers' },
   };
 
   async execute(_thoughtProcessId: string, _parameters: Record<string, unknown>, _data: any) {
@@ -54,7 +54,7 @@ class PlaceOnGuard extends Action {
   name = 'place-on-guard';
   description = 'Place military assets on guard at coordinates';
   parameters = {
-    coordinates: { type: 'array', description: 'The coordinates to check, as a tuple of integers' },
+    coordinates: { type: 'array', description: 'The coordinates to check, as an x,y,z tuple of integers' },
     meters: { type: 'number', description: 'The radius, in meters, to place the assets on guard' },
   };
 
