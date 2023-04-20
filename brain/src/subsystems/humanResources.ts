@@ -17,7 +17,10 @@ export class HumanResources implements Subsystem {
               count as number
             }`;
 
-          results[type] = characterRes.map(character => ({ id: character.id, name: character.name }));
+          results[type] = characterRes.map(character => ({
+            id: character.id,
+            name: `${character.title ? character.title + ' ' : ''}${character.first_name}${character.last_name}`,
+          }));
 
           const characterIds = characterRes.map(character => character.id);
           await tSql`update characters set allocated = true where id in (${sql(characterIds)})`;
