@@ -34,43 +34,45 @@ export default async () => {
         const existingChild = existingChildRes[0];
 
         if (existingChild) {
-          // check if child has an active, non-reponded-to message to origin subsystem
+          // check if child has an active, non-responded-to message to origin subsystem
           const existingChildMessageRes = await sql`
-            select messages.* from messages left join thought_process_actions on messages.from_action_id = thought_process_actions.id where thought_process_actions.thought_process_id = ${existingChild.id} and messages.direction = 'in' and messages.response_to is null and messages.subsystem = ${signal.from_subsystem}
+            select messages.* from messages
+            left join thought_process_actions on messages.from_action_id = thought_process_actions.id
+            where thought_process_actions.thought_process_id = ${existingChild.id}
+            and messages.direction = 'in' is null
+            and messages.subsystem = ${signal.from_subsystem}
+            and messages.id not in (
+              select response_to from messages where response_to is not null
+            )
           `;
           const existingChildMessage = existingChildMessageRes[0];
 
           if (existingChildMessage) {
-            const responseToChildMessageRes = await sql`
-              select * from messages where response_to = ${existingChildMessage.id}
-            `;
-
-            if (responseToChildMessageRes.length === 0) {
-              // set response_to to existing child message
-              await sql`update messages set response_to = ${existingChildMessage.id} where id = ${signal.id}`;
-              continue;
-            }
+            // set response_to to existing child message
+            await sql`update messages set response_to = ${existingChildMessage.id} where id = ${signal.id}`;
+            continue;
           }
         }
       } else {
         // this is a child
         // check if parent has an active, non-reponded-to message to origin subsystem
         const parentMessageRes = await sql`
-          select messages.* from messages left join thought_process_actions on messages.from_action_id = thought_process_actions.id where thought_process_actions.thought_process_id = ${parentThoughtProcessId} and messages.direction = 'in' and messages.response_to is null and messages.subsystem = ${signal.from_subsystem}
+          select messages.* from messages
+          left join thought_process_actions on messages.from_action_id = thought_process_actions.id
+          where thought_process_actions.thought_process_id = ${parentThoughtProcessId}
+          and messages.direction = 'in'
+          and messages.response_to is null
+          and messages.subsystem = ${signal.from_subsystem}
+          and messages.id not in (
+            select response_to from messages where response_to is not null
+          )
         `;
-        logger.debug(JSON.stringify(parentMessageRes));
         const parentMessage = parentMessageRes[0];
 
         if (parentMessage) {
-          const responseToParentMessageRes = await sql`
-            select * from messages where response_to = ${parentMessage.id}
-          `;
-
-          if (responseToParentMessageRes.length === 0) {
-            // set response_to to parent message
-            await sql`update messages set response_to = ${parentMessage.id} where id = ${signal.id}`;
-            continue;
-          }
+          // set response_to to existing parent message
+          await sql`update messages set response_to = ${parentMessage.id} where id = ${signal.id}`;
+          continue;
         }
       }
     }

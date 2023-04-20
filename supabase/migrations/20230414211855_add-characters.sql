@@ -7,6 +7,8 @@ create table characters (
   backstory text not null,
   personality text not null,
   writing_style text not null,
+  allocated boolean default false,
+  deceased boolean default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

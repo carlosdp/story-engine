@@ -26,7 +26,7 @@ function App() {
   return (
     <Box alignItems="center" flexDirection="column" display="flex" width="100%">
       <Box justifyContent="center" display="flex" width="100%" paddingTop="36px" paddingBottom="36px">
-        <Box alignItems="center" flexDirection="row" display="flex" width="100%" maxWidth="1690px">
+        <Box alignItems="center" flexDirection="row" display="flex" width="100%" maxWidth="1690px" padding="0px 32px">
           <Text as={Link} fontSize="lg" fontWeight="bold" to="/">
             Calamity Control
           </Text>

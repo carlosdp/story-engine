@@ -10,7 +10,13 @@ export type ActionCommand = {
   parameters: Record<string, unknown>;
 };
 
-export abstract class Subsystem {
+export type Subsystem = {
+  processSignal(message: SubsystemMessage): Promise<string>;
+  continueProcessing(thoughtProcessId: string, completedActionId: string): Promise<string>;
+  getAction(name: string): Action;
+};
+
+export abstract class LLMSubsystem implements Subsystem {
   abstract name: string;
   abstract basePrompt: string;
   abstract actions: Record<string, Action>;
@@ -114,5 +120,7 @@ export abstract class Subsystem {
     }
 
     await action.queue(thoughtProcessId, actionCommand.parameters);
+
+    return thoughtProcessId;
   }
 }

@@ -79,6 +79,7 @@ export const GenerateCharacters = () => {
             <FormLabel>Rust NPC Type</FormLabel>
             <Select {...register('rustNpcType', { required: true })}>
               <option value="scientist">Scientist</option>
+              <option value="bandit">Bandit</option>
             </Select>
             {formState.errors.rustNpcType && (
               <FormErrorMessage>{formState.errors.rustNpcType.message}</FormErrorMessage>

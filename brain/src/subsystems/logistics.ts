@@ -1,5 +1,5 @@
 import { Action, SignalAction, SignalActionPayload } from '../action';
-import { Subsystem } from './base';
+import { LLMSubsystem } from './base';
 
 // - Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
 const BASE_PROMPT = `You are the Logistics subordinate function of a super intelligent AI that controls a remote island using a combination of drones, scientists, and bandits.
@@ -36,7 +36,7 @@ class RespondToOverlord extends SignalAction {
   }
 
   async responseToResult(parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
-    return `Military: ${JSON.stringify(response)}`;
+    return `overlord: ${JSON.stringify(response)}`;
   }
 }
 
@@ -70,7 +70,7 @@ class ConstructBase extends Action {
   }
 }
 
-export class Logistics extends Subsystem {
+export class Logistics extends LLMSubsystem {
   name = 'logistics';
   basePrompt = BASE_PROMPT;
   actions = {

@@ -1,5 +1,5 @@
 import { SignalAction, SignalActionPayload } from '../action';
-import { Subsystem } from './base';
+import { LLMSubsystem } from './base';
 
 // - Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
 const BASE_PROMPT = `You are a super intelligent AI that controls a remote island using a combination of drones, scientists, and bandits, all recruited by you to your dastardly cause.
@@ -62,7 +62,7 @@ class CommunicateToLogistics extends SignalAction {
   }
 }
 
-export class Overlord extends Subsystem {
+export class Overlord extends LLMSubsystem {
   name = 'overlord';
   basePrompt = BASE_PROMPT;
   actions = {

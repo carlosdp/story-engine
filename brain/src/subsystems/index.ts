@@ -1,3 +1,4 @@
+import { HumanResources } from './humanResources';
 import { Logistics } from './logistics';
 import { Military } from './military';
 import { Overlord } from './overlord';
@@ -6,6 +7,7 @@ const subsystems = {
   overlord: new Overlord(),
   military: new Military(),
   logistics: new Logistics(),
+  humanResources: new HumanResources(),
 };
 
 export default subsystems;
