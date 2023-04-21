@@ -16,10 +16,24 @@ const jobFunctions = {
   sendTimeSignal: sendTimeSignal,
 };
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+const wrapExceptionLog = (jobFunction: Function) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return async (...args: any[]) => {
+    try {
+      return await jobFunction(...args);
+    } catch (error) {
+      logger.error((error as Error).message);
+      throw error;
+    }
+  };
+};
+
 for (const [jobName, jobFunction] of Object.entries(jobFunctions)) {
-  boss.work(jobName, jobFunction);
+  boss.work(jobName, wrapExceptionLog(jobFunction));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   boss.onComplete(jobName, (job: { failed: boolean; response: any }) => {
+    logger.debug(job);
     if (job.failed) {
       logger.error(`Job ${jobName} failed: ${job.response}`);
     }

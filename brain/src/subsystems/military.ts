@@ -47,10 +47,12 @@ class CheckExistingMilitaryAssets extends Action {
     coordinates: { type: 'array', description: 'The coordinates to check, as an x,y,z tuple of integers' },
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(_thoughtProcessId: string, _parameters: Record<string, unknown>, _data: any) {
     return { status: Action.STATUS_COMPLETE, data: { units: [] } };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async result(_thoughtProcessId: string, parameters: Record<string, unknown>, _data: any) {
     return `Found no military assets near coordinates ${JSON.stringify(parameters.coordinates)}}`;
   }
@@ -64,10 +66,12 @@ class PlaceOnGuard extends Action {
     meters: { type: 'number', description: 'The radius, in meters, to place the assets on guard' },
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(_thoughtProcessId: string, _parameters: Record<string, unknown>, _data: any) {
     return { status: Action.STATUS_COMPLETE, data: 'Guard placed' };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async result(_thoughtProcessId: string, _parameters: Record<string, unknown>, _data: any) {
     return 'Units in area now on guard';
   }

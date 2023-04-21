@@ -78,6 +78,7 @@ export abstract class LLMSubsystem implements Subsystem {
 
     startingMessages.push(response);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await sql`update thought_processes set messages = ${startingMessages as any[]} where id = ${thoughtProcessId}`;
 
     return thoughtProcessId;
