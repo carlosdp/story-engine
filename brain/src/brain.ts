@@ -1,6 +1,7 @@
 import { boss } from './db';
 import logger from './logging';
 import generateCharacters from './tasks/generateCharacters';
+import generateLetter from './tasks/generateLetter';
 import processActions from './tasks/processActions';
 import processSignals from './tasks/processSignals';
 import sendTimeSignal from './tasks/sendTimeSignal';
@@ -14,6 +15,7 @@ const jobFunctions = {
   processSignals: processSignals,
   processActions: processActions,
   sendTimeSignal: sendTimeSignal,
+  generateLetter: generateLetter,
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types

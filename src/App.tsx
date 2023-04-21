@@ -1,10 +1,13 @@
-import { Box, Text } from '@chakra-ui/react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Box, Button, Text } from '@chakra-ui/react';
+import { Link, Route, Routes } from 'react-router-dom';
 
 import { PageContainer } from './components/PageContainer';
 import { CharacterDetail } from './screens/CharacterDetail';
 import { CharacterList } from './screens/CharacterList';
 import { GenerateCharacters } from './screens/GenerateCharacters';
+import { GenerateLetter } from './screens/GenerateLetter';
+import { LetterDetail } from './screens/LetterDetail';
+import { LetterList } from './screens/LetterList';
 import { MockSignals } from './screens/MockSignals';
 import { ThoughtProcessDetails } from './screens/ThoughtProcessDetails';
 import { ThoughtProcesses } from './screens/ThoughtProcesses';
@@ -12,12 +15,15 @@ import { ThoughtProcesses } from './screens/ThoughtProcesses';
 const Home = () => {
   return (
     <PageContainer>
-      <Text as={Link} fontSize="xl" fontWeight="bold" to="/characters">
+      <Button as={Link} marginBottom="6" fontSize="xl" fontWeight="bold" to="/characters">
         Characters
-      </Text>
-      <Text as={Link} fontSize="xl" fontWeight="bold" to="/thought_processes">
+      </Button>
+      <Button as={Link} marginBottom="6" fontSize="xl" fontWeight="bold" to="/thought_processes">
         Thought Processes
-      </Text>
+      </Button>
+      <Button as={Link} marginBottom="6" fontSize="xl" fontWeight="bold" to="/letters">
+        Letters
+      </Button>
     </PageContainer>
   );
 };
@@ -40,6 +46,10 @@ function App() {
         <Route path="/characters/:id" element={<CharacterDetail />} />
         <Route path="/thought_processes" element={<ThoughtProcesses />} />
         <Route path="/thought_processes/:id" element={<ThoughtProcessDetails />} />
+        <Route path="/letters" element={<LetterList />} />
+        <Route path="/generate-letter" element={<GenerateLetter />} />
+        <Route path="/letters/:id" element={<LetterDetail />} />
+
         <Route path="/send-signals" element={<MockSignals />} />
       </Routes>
     </Box>

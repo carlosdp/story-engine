@@ -13,7 +13,8 @@ export const useThoughtProcesses = () => {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) {
-        throw new Error(error.message);
+        error.message && console.error(error.message);
+        return [];
       }
 
       return data;

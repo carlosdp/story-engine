@@ -13,22 +13,18 @@ export const message = async (
     retryDelay: axiosRetry.exponentialDelay,
     retryCondition: error => axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
   });
-
+  const data = {
+    model,
+    messages,
+    temperature: temperature || 0,
+    max_tokens: maxTokens,
+  };
   try {
-    const res = await client.post(
-      '/chat/completions',
-      {
-        model,
-        messages,
-        temperature: temperature || 0,
-        max_tokens: maxTokens,
+    const res = await client.post('/chat/completions', data, {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-      }
-    );
+    });
 
     if (res.status !== 200) {
       throw new Error(`OpenAI API error: ${res.statusText}`);

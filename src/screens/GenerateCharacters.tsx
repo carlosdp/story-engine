@@ -77,7 +77,7 @@ export const GenerateCharacters = () => {
           </FormControl>
           <FormControl isInvalid={!!formState.errors.rustNpcType} isRequired={true}>
             <FormLabel>Rust NPC Type</FormLabel>
-            <Select {...register('rustNpcType', { required: true })}>
+            <Select placeholder="Select a role" {...register('rustNpcType', { required: true })}>
               <option value="scientist">Scientist</option>
               <option value="bandit">Bandit</option>
             </Select>

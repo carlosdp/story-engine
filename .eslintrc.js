@@ -82,6 +82,8 @@ module.exports = {
     'react/prop-types': 'off',
     'react/no-unescaped-entities': 'off',
     'react/react-in-jsx-scope': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+
     // TODO: re-enable when migration complete
     'react/jsx-no-undef': 'off',
     /**

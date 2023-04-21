@@ -2,16 +2,16 @@ import { useQuery } from 'react-query';
 
 import { useSupabase } from '../SupabaseProvider';
 
-export const useCharacters = () => {
+export const useLetter = (id: string) => {
   const { client } = useSupabase();
 
   return useQuery({
-    queryKey: ['characters'],
+    queryKey: ['letter', id],
     queryFn: async () => {
-      const { data, error } = await client.from('characters').select('*');
+      const { data, error } = await client.from('letters').select('*').eq('id', id).single();
       if (error) {
         error.message && console.error(error.message);
-        return [];
+        return undefined;
       }
 
       return data;

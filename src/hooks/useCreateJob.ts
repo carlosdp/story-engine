@@ -9,7 +9,6 @@ export const useCreateJob = () => {
   const create = useCallback(
     async (job: Database['public']['Tables']['job']['Insert']) => {
       const res = await client.from('job').insert(job).select('id').single();
-
       if (res.error) {
         throw new Error(res.error.message);
       }

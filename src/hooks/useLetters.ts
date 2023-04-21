@@ -2,13 +2,13 @@ import { useQuery } from 'react-query';
 
 import { useSupabase } from '../SupabaseProvider';
 
-export const useCharacters = () => {
+export const useLetters = () => {
   const { client } = useSupabase();
 
   return useQuery({
-    queryKey: ['characters'],
+    queryKey: ['letters'],
     queryFn: async () => {
-      const { data, error } = await client.from('characters').select('*');
+      const { data, error } = await client.from('letters').select('*');
       if (error) {
         error.message && console.error(error.message);
         return [];

@@ -96,8 +96,6 @@ const COUNTRIES = [
 ];
 
 export default async (job: Job<GenerateCharactersJob>) => {
-  logger.debug('generate-characters job', job);
-
   for (let i = 0; i < job.data.count; i++) {
     const randomCountry = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
     const randomGender = Math.random() > 0.5 ? 'Male' : 'Female';
@@ -130,7 +128,6 @@ export default async (job: Job<GenerateCharactersJob>) => {
       0.7
     );
 
-    logger.debug(response);
     const character = JSON.parse(response);
     await sql`
       INSERT INTO characters (title, first_name, last_name, backstory, personality, writing_style, rust_npc_type)
@@ -229,7 +226,10 @@ export default async (job: Job<GenerateCharactersJob>) => {
         
         Sometimes surprise is good, so choosing for characters to have a relationship that is not immediately obvious from their profiles could be desirable.`,
           },
-          { role: 'user', content: `${JSON.stringify(characters[0])}\n\n${JSON.stringify(characters[1])}` },
+          {
+            role: 'user',
+            content: `${JSON.stringify(characters[0])}\n\n${JSON.stringify(characters[1])}`,
+          },
           { role: 'system', content: 'Respond in pure JSON only' },
         ],
         500,
