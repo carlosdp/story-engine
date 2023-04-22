@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 import { Database } from './supabaseTypes';
 
-type User = AuthUser;
+type User = AuthUser & Database['public']['Views']['users']['Row'];
 type SupabaseContextProps = {
   client: SupabaseClient<Database>;
   logout: () => void;

@@ -26,16 +26,16 @@ export const LetterDetail = () => {
   const [letterWithSenders, setLetterWithSenders] = useState<any>();
 
   useEffect(() => {
-    const makeLetter = async () => {
-      const { data: sender } = await client.from('characters').select('*').eq('id', letter.sender).single();
-      const { data: recipient } = await client.from('characters').select('*').eq('id', letter.recipient).single();
+    (async () => {
+      if (letter && client) {
+        const { data: sender } = await client.from('characters').select('*').eq('id', letter.sender).single();
+        const { data: recipient } = await client.from('characters').select('*').eq('id', letter.recipient).single();
 
-      const senderName = sender ? `${sender.first_name} ${sender.last_name}` : 'unknown';
-      const recipientName = recipient ? `${recipient.first_name} ${recipient.last_name}` : 'unknown';
-      setLetterWithSenders({ ...letter, senderName, recipientName });
-    };
-
-    if (letter && client) makeLetter();
+        const senderName = sender ? `${sender.first_name} ${sender.last_name}` : 'unknown';
+        const recipientName = recipient ? `${recipient.first_name} ${recipient.last_name}` : 'unknown';
+        setLetterWithSenders({ ...letter, senderName, recipientName });
+      }
+    })();
   }, [letter, client]);
 
   if (isLoading || !letterWithSenders) {

@@ -127,8 +127,10 @@ export interface Database {
       };
       characters: {
         Row: {
+          allocated: boolean | null;
           backstory: string;
           created_at: string;
+          deceased: boolean | null;
           first_name: string;
           id: string;
           last_name: string;
@@ -139,8 +141,10 @@ export interface Database {
           writing_style: string;
         };
         Insert: {
+          allocated?: boolean | null;
           backstory: string;
           created_at?: string;
+          deceased?: boolean | null;
           first_name: string;
           id?: string;
           last_name: string;
@@ -151,8 +155,10 @@ export interface Database {
           writing_style: string;
         };
         Update: {
+          allocated?: boolean | null;
           backstory?: string;
           created_at?: string;
+          deceased?: boolean | null;
           first_name?: string;
           id?: string;
           last_name?: string;
@@ -228,6 +234,35 @@ export interface Database {
           state?: Database['public']['Enums']['job_state'];
         };
       };
+      letters: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          recipient: string;
+          sender: string;
+          summary: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          recipient: string;
+          sender: string;
+          summary?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          recipient?: string;
+          sender?: string;
+          summary?: string | null;
+          updated_at?: string;
+        };
+      };
       messages: {
         Row: {
           acknowledged_at: string | null;
@@ -267,6 +302,38 @@ export interface Database {
           subsystem?: string;
           type?: Database['public']['Enums']['message_type'];
           updated_at?: string;
+        };
+      };
+      profiles: {
+        Row: {
+          created_at: string | null;
+          is_staff: boolean;
+          owns_rust: boolean | null;
+          rust_played_minutes_recent: number | null;
+          rust_played_minutes_total: number | null;
+          steam_id: string | null;
+          updated_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          is_staff?: boolean;
+          owns_rust?: boolean | null;
+          rust_played_minutes_recent?: number | null;
+          rust_played_minutes_total?: number | null;
+          steam_id?: string | null;
+          updated_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          is_staff?: boolean;
+          owns_rust?: boolean | null;
+          rust_played_minutes_recent?: number | null;
+          rust_played_minutes_total?: number | null;
+          steam_id?: string | null;
+          updated_at?: string | null;
+          user_id?: string;
         };
       };
       schedule: {
@@ -444,16 +511,16 @@ export interface Database {
       };
       users: {
         Row: {
+          created_at: string | null;
           email: string | null;
           id: string | null;
-        };
-        Insert: {
-          email?: string | null;
-          id?: string | null;
-        };
-        Update: {
-          email?: string | null;
-          id?: string | null;
+          is_staff: boolean | null;
+          owns_rust: boolean | null;
+          rust_played_minutes_recent: number | null;
+          rust_played_minutes_total: number | null;
+          steam_id: string | null;
+          updated_at: string | null;
+          user_id: string | null;
         };
       };
     };
