@@ -512,6 +512,7 @@ export interface Database {
       users: {
         Row: {
           created_at: string | null;
+          discord_id: string | null;
           email: string | null;
           id: string | null;
           is_staff: boolean | null;

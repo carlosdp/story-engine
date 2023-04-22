@@ -65,6 +65,23 @@ const _handler: Handler = async (event: HandlerEvent, _context: HandlerContext) 
 
   await client.from('profiles').update(newUserData).eq('user_id', user.id);
 
+  if (process.env.DISCORD_GUILD_ID) {
+    try {
+      // use Discord API to add "Registered" role to user
+      await axios.put(
+        `https://discord.com/api/guilds/${process.env.DISCORD_GUILD_ID}/members/${user.discord_id}/roles/${process.env.DISCORD_REGISTERED_ROLE_ID}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error(error.response.data);
+    }
+  }
+
   return {
     statusCode: 307,
     headers: {

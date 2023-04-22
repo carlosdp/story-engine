@@ -106,3 +106,5 @@ docs/api
 
 # Local Netlify folder
 .netlify
+
+supabase/.*

@@ -29,8 +29,9 @@ drop view users;
 
 create view users as
 select
-  id,
-  email,
-  profiles.*
+  auth.users.id,
+  auth.users.email,
+  profiles.*,
+  auth.identities.id as discord_id
 from
-  auth.users left join profiles on auth.users.id = profiles.user_id;
+  auth.users left join profiles on auth.users.id = profiles.user_id left join auth.identities on auth.users.id = auth.identities.user_id;
