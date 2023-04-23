@@ -24,16 +24,24 @@ export const SteamLinked = () => {
             <Flex flexDirection="column" gap="12px">
               <Text fontSize="lg" fontWeight="bold">
                 {user?.owns_rust === null
-                  ? "Your Steam profile is private, so we don't if you own Rust. That's okay, just make sure you own Rust before the server starts!"
+                  ? "Your Steam profile is private, so we can't check if you own Rust."
                   : !user?.owns_rust
                   ? "It looks like you don't own a copy of Rust on Steam..."
                   : 'It looks like you own a copy of Rust on Steam, you are good to go!'}
               </Text>
               {!user?.owns_rust ? (
                 <>
-                  <Text>
-                    You will need a copy in order to play on the server, make sure you buy it before the server begins!
-                  </Text>
+                  {user?.owns_rust === false ? (
+                    <Text>
+                      You will need a copy in order to play on the server, make sure you buy it before the server
+                      begins!
+                    </Text>
+                  ) : (
+                    <Text>
+                      If you already own it, you're good to go! If not, you will need a copy in order to play on the
+                      server, make sure you buy it before the server begins.
+                    </Text>
+                  )}
                   <Box>
                     <Button
                       as={Link}
