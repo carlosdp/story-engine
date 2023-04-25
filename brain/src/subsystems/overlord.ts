@@ -62,11 +62,31 @@ class CommunicateToLogistics extends SignalAction {
   }
 }
 
+class CommunicateToIntelligence extends SignalAction {
+  name = 'intelligence';
+  description = 'Communicate to Intelligence subsystem, responsible for tracking human activity and base locations';
+  parameters = {
+    message: { type: 'string', description: 'The message' },
+  };
+  from_subsystem = 'overlord';
+  subsystem = 'intelligence';
+  direction = 'in' as const;
+
+  async payload(parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    return { message: parameters.message };
+  }
+
+  async responseToResult(parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Intelligence: ${JSON.stringify(response)}`;
+  }
+}
+
 export class Overlord extends LLMSubsystem {
   name = 'overlord';
   basePrompt = BASE_PROMPT;
   actions = {
     military: new CommunicateToMilitary(),
     logistics: new CommunicateToLogistics(),
+    intelligence: new CommunicateToIntelligence(),
   };
 }

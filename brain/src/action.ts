@@ -1,7 +1,14 @@
 import { sql } from './db';
+import { embedding } from './utils';
+
+export type Observation = {
+  subsystem: string;
+  text: string;
+  location?: number[] | null;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ActionResult = { status: 'failed' } | { status: 'waiting' | 'complete'; data: any };
+export type ActionResult = { status: 'failed' } | { status: 'waiting' | 'complete'; data: any };
 
 export abstract class Action {
   abstract name: string;
@@ -62,6 +69,23 @@ export abstract class Action {
     await sql`update messages set acknowledged_at = now() where id = ${message.id}`;
 
     return message.payload;
+  }
+
+  protected async saveObservation(observation: Observation) {
+    const embed = await embedding(observation.text);
+
+    const rows = await sql`
+      insert into observations ${sql({
+        ...observation,
+        embedding: embed,
+        location:
+          observation.location && observation.location.length > 1
+            ? [observation.location[0], observation.location[observation.location.length - 1]]
+            : null,
+      })} returning id
+    `;
+
+    return rows[0].id;
   }
 }
 

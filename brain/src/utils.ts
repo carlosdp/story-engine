@@ -78,3 +78,27 @@ export const rawMessage = async (
     throw error;
   }
 };
+
+export const embedding = async (text: string) => {
+  const client = axios.create({ baseURL: 'https://api.openai.com/v1' });
+  axiosRetry(client, {
+    retries: 5,
+    retryDelay: axiosRetry.exponentialDelay,
+    retryCondition: error => axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
+  });
+
+  const embeddingRes = await client.post(
+    '/embeddings',
+    {
+      model: 'text-embedding-ada-002',
+      input: [text],
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+    }
+  );
+
+  return embeddingRes.data.data[0].embedding;
+};

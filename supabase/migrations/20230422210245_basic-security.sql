@@ -12,12 +12,18 @@ alter table profiles enable row level security;
 alter table thought_process_actions enable row level security;
 alter table thought_processes enable row level security;
 
-create policy "Users can see their own profiles, staff can see all" on profiles for select using (auth.uid() = user_id or auth.uid() in (select user_id from profiles where is_staff = true));
+create view staff_users AS
+select user_id
+from profiles
+where is_staff = true;
+
+create policy "Users can see their own profiles, staff can see all" on profiles for select using (auth.uid() = user_id or exists (select 1 from staff_users where staff_users.user_id = auth.uid()));
 create policy "Staff can see jobs" on job for select using (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can insert jobs" on job for insert with check (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can see characters" on characters for select using (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can see character relationships" on character_relationships for select using (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can see letters" on letters for select using (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can see messages" on messages for select using (auth.uid() in (select user_id from profiles where is_staff = true));
+create policy "Staff can insert messages" on messages for insert with check (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can see thought processes" on thought_processes for select using (auth.uid() in (select user_id from profiles where is_staff = true));
 create policy "Staff can see thought process actions" on thought_process_actions for select using (auth.uid() in (select user_id from profiles where is_staff = true));

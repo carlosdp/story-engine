@@ -21,6 +21,8 @@ export abstract class LLMSubsystem implements Subsystem {
   abstract basePrompt: string;
   abstract actions: Record<string, Action>;
 
+  temperature = 0.4;
+
   getAction(name: string) {
     return this.actions[name];
   }
@@ -57,7 +59,7 @@ export abstract class LLMSubsystem implements Subsystem {
       'gpt-4',
       [...startingMessages, { role: 'system', content: 'Respond in pure JSON only' }],
       400,
-      0.4
+      this.temperature
     );
     logger.debug(response.content);
 
@@ -99,7 +101,7 @@ export abstract class LLMSubsystem implements Subsystem {
       'gpt-4',
       [...messages, { role: 'system', content: 'Respond in pure JSON only' }],
       400,
-      0.4
+      this.temperature
     );
     logger.debug(response.content);
 
