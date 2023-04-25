@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "netlify dev",
+    "dev:tunnel": "node runWithTunnel.js",
     "dev:vite": "vite",
     "build": "tsc && vite build",
     "brain": "cd brain && tsc && yarn run:brain",
@@ -27,6 +28,7 @@
     "axios-retry": "^3.4.0",
     "framer-motion": "^6",
     "moment": "^2.29.4",
+    "ngrok": "^4.3.3",
     "node-steam-openid": "^1.0.1",
     "pg-boss": "^8.4.2",
     "postgres": "^3.3.4",

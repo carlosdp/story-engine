@@ -1,6 +1,22 @@
 # Project Calamity (Brain)
 This is the brain and web UI to control Project Calamity.
 
+## Using Tunnel to develop with Rust plugins
+Using the `yarn dev:tunnel` command, you can have your local dev server run at a consistent URL, and setup your Rust server's CAControl so it connects to it, making it easy to connect your Rust server to your local dev brain.
+
+1. Request an Ngrok auth token from Carlos.
+2. Add the auth token to your environment as `NGROK_AUTH_TOKEN`, and choose a subdomain for your tunnel as `NGROK_SUBDOMAIN` (https://{yoursubdomain}.ngrok.io). **DO NOT** put these in a `.env` file or anything in the repo, put them in your machine's environment.
+3. Run `yarn dev:tunnel` to start your local brain server.
+4. Add a file a file in your `calamity-rust` repo on your Rust server at `oxide/config/CAControl.json` with your tunnel URL:
+```json
+{
+  "brain_url": "https://{yoursubdomain}.ngrok.io"
+}
+```
+5. Restart your Rust server
+
+Now, your Rust server should connect to your local dev brain server, as long as it is running!
+
 ## Thinking Architecture
 The AI is composed of several GPT-based agent "subsystems", orchestrated using "signals". Each subsystem can influence the game world, and retrieve data using "actions".
 
