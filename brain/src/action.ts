@@ -77,7 +77,7 @@ export abstract class Action {
     const rows = await sql`
       insert into observations ${sql({
         ...observation,
-        embedding: embed,
+        embedding: JSON.stringify(embed),
         location:
           observation.location && observation.location.length > 1
             ? [observation.location[0], observation.location[observation.location.length - 1]]

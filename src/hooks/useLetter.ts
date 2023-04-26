@@ -10,8 +10,7 @@ export const useLetter = (id: string) => {
     queryFn: async () => {
       const { data, error } = await client.from('letters').select('*').eq('id', id).single();
       if (error) {
-        error.message && console.error(error.message);
-        return undefined;
+        throw new Error(error.message);
       }
 
       return data;

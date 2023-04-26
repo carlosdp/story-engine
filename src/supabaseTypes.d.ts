@@ -313,6 +313,7 @@ export interface Database {
           subsystem: string;
           text: string;
           updated_at: string;
+          updated_observation_id: string | null;
         };
         Insert: {
           created_at?: string;
@@ -322,6 +323,7 @@ export interface Database {
           subsystem: string;
           text: string;
           updated_at?: string;
+          updated_observation_id?: string | null;
         };
         Update: {
           created_at?: string;
@@ -331,6 +333,7 @@ export interface Database {
           subsystem?: string;
           text?: string;
           updated_at?: string;
+          updated_observation_id?: string | null;
         };
       };
       profiles: {
@@ -589,6 +592,29 @@ export interface Database {
           updated_at: string;
           relationship_type: string;
           description_of_interactions: string;
+        }[];
+      };
+      search_observations: {
+        Args: {
+          search_embedding: unknown;
+          search_location: unknown;
+          decay_rate: number;
+          min_similarity: number;
+          max_range: number;
+        };
+        Returns: {
+          id: string;
+          subsystem: string;
+          text: string;
+          embedding: unknown;
+          location: unknown;
+          updated_observation_id: string;
+          created_at: string;
+          updated_at: string;
+          similarity: number;
+          distance: number;
+          time_weight: number;
+          final_weight: number;
         }[];
       };
     };

@@ -21,11 +21,12 @@ export const sql = postgres('postgres://postgres:postgres@localhost:54322/postgr
           .split(',')
           .map((v: string) => +v),
     },
-    vector: {
-      to: 17_633,
-      from: [17_633],
-      serialize: (embed: number[]) => JSON.stringify(embed),
-      parse: (x: string) => JSON.parse(x),
-    },
+    // carlos: pgvector doesn't have a stable oid -__-
+    // vector: {
+    //   to: 17_633,
+    //   from: [17_633],
+    //   serialize: (embed: number[]) => JSON.stringify(embed),
+    //   parse: (x: string) => JSON.parse(x),
+    // },
   },
 });

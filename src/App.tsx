@@ -14,6 +14,7 @@ import { LetterDetail } from './screens/LetterDetail';
 import { LetterList } from './screens/LetterList';
 import { Login } from './screens/Login';
 import { MockSignals } from './screens/MockSignals';
+import { Observations } from './screens/Observations';
 import { Register } from './screens/Register';
 import { ThoughtProcessDetails } from './screens/ThoughtProcessDetails';
 import { ThoughtProcesses } from './screens/ThoughtProcesses';
@@ -44,6 +45,7 @@ function App() {
             <Route path="/letters" element={<LetterList />} />
             <Route path="/generate-letter" element={<GenerateLetter />} />
             <Route path="/letters/:id" element={<LetterDetail />} />
+            <Route path="/observations" element={<Observations />} />
           </Route>
         </Route>
       </Routes>

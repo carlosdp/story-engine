@@ -63,8 +63,9 @@ class SearchObservations extends Action {
       let location = parameters.location as [number, number] | null;
       location = location && location.length > 1 ? [location[0], location[location.length - 1]] : null;
 
-      const rows =
-        await sql`select id, text, location from search_observations(${embed}, ${location}, 0.1, 0.7, 100.0) where updated_observation_id is null limit 10`;
+      const rows = await sql`select id, text, location from search_observations(${JSON.stringify(
+        embed
+      )}, ${location}, 0.1, 0.7, 100.0) where updated_observation_id is null limit 10`;
 
       return { status: 'complete', data: rows };
     } catch (error) {
@@ -95,8 +96,9 @@ class StoreObservation extends Action {
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
     try {
       if (parameters.update_to) {
-        const rows =
-          await sql`select id from observations where id = ${parameters.update_to} and updated_observation_id is null`;
+        const rows = await sql`select id from observations where id = ${
+          parameters.update_to as string
+        } and updated_observation_id is null`;
 
         if (rows.length === 0) {
           return { status: 'complete', data: `Observation ID ${parameters.update_to} is invalid` };
@@ -110,7 +112,9 @@ class StoreObservation extends Action {
       });
 
       if (parameters.update_to) {
-        await sql`update observations set updated_observation_id = ${observationId} where id = ${parameters.update_to}`;
+        await sql`update observations set updated_observation_id = ${observationId} where id = ${
+          parameters.update_to as string
+        }`;
       }
 
       return { status: 'complete', data: 'Observation saved' };

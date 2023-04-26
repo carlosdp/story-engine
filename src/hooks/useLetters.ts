@@ -10,8 +10,7 @@ export const useLetters = () => {
     queryFn: async () => {
       const { data, error } = await client.from('letters').select('*');
       if (error) {
-        error.message && console.error(error.message);
-        return [];
+        throw new Error(error.message);
       }
 
       return data;
