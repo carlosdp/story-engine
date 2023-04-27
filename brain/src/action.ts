@@ -58,6 +58,35 @@ export abstract class Action {
   }
 
   protected async getSignalResponse(messageId: string) {
+    const signalRes = await sql`select * from messages where id = ${messageId}`;
+    const signal = signalRes[0];
+
+    if (!signal) {
+      return null;
+    }
+
+    if (signal.response_to && signal.direction === 'in') {
+      // check if target thought process is terminated
+      const responseToSignalRes = await sql`select * from messages where id = ${signal.response_to}`;
+      const responseToSignal = responseToSignalRes[0];
+
+      if (!responseToSignal) {
+        return null;
+      }
+
+      const targetThoughtProcessRes =
+        await sql`select * from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${responseToSignal.from_action_id}`;
+      const targetThoughtProcess = targetThoughtProcessRes[0];
+
+      if (!targetThoughtProcess) {
+        return null;
+      }
+
+      if (targetThoughtProcess.terminated_at) {
+        return false;
+      }
+    }
+
     const messageRes =
       await sql`select * from messages where direction = 'in' and response_to = ${messageId} and acknowledged_at is null`;
     const message = messageRes[0];
@@ -117,6 +146,8 @@ export abstract class SignalAction extends Action {
       const response = await this.getSignalResponse(data.messageId);
       if (response === null) {
         return { status: Action.STATUS_WAITING, data };
+      } else if (response === false) {
+        return { status: Action.STATUS_FAILED };
       }
 
       return { status: Action.STATUS_COMPLETE, data: { ...data, responsePayload: response } };

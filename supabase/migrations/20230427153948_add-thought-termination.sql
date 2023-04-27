@@ -1,0 +1,1 @@
+alter table thought_processes add column terminated_at timestamptz;

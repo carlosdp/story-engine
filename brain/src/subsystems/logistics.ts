@@ -40,11 +40,33 @@ class RespondToOverlord extends SignalAction {
   }
 }
 
+class ResourceReport extends SignalAction {
+  name = 'resource-report';
+  description = 'Get a report on resource stockpiles';
+  parameters = {};
+  from_subsystem = 'logistics';
+  subsystem = 'resourceDepot';
+  direction = 'in' as const;
+
+  async payload(_parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    return { action: 'resource-report', parameters: {} };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return JSON.stringify(response);
+  }
+}
+
 class ConstructBase extends Action {
   name = 'construct-base';
-  description = 'Construct a new base';
+  description = 'Construct a new base. Each base increases resource gather rate';
   parameters = {
-    purpose: { type: 'string', description: 'The purpose of the base' },
+    name: { type: 'string', description: 'Give the base a unique name' },
+    location: {
+      type: 'string',
+      nullable: true,
+      description: 'Build the base as close as possible to a particular location',
+    },
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -76,5 +98,6 @@ export class Logistics extends LLMSubsystem {
   actions = {
     'respond-to-overlord': new RespondToOverlord(),
     'construct-base': new ConstructBase(),
+    'resource-report': new ResourceReport(),
   };
 }

@@ -1,4 +1,4 @@
-import { sql } from '../db';
+import { boss, sql } from '../db';
 import logger from '../logging';
 import { SubsystemMessage } from '../signal';
 import subsystems from '../subsystems';
@@ -39,7 +39,8 @@ export default async () => {
             select messages.* from messages
             left join thought_process_actions on messages.from_action_id = thought_process_actions.id
             where thought_process_actions.thought_process_id = ${existingChild.id}
-            and messages.direction = 'in' is null
+            and messages.direction = 'in'
+            and messages.from_subsystem = ${signal.subsystem}
             and messages.subsystem = ${signal.from_subsystem}
             and messages.id not in (
               select response_to from messages where response_to is not null
@@ -61,7 +62,7 @@ export default async () => {
           left join thought_process_actions on messages.from_action_id = thought_process_actions.id
           where thought_process_actions.thought_process_id = ${parentThoughtProcessId}
           and messages.direction = 'in'
-          and messages.response_to is null
+          and messages.from_subsystem = ${signal.subsystem}
           and messages.subsystem = ${signal.from_subsystem}
           and messages.id not in (
             select response_to from messages where response_to is not null
@@ -84,5 +85,9 @@ export default async () => {
     await sql`update messages set acknowledged_at = now() where id = ${signal.id}`;
 
     logger.info(`Processed signal ${signal.id} with thought process ${thoughtProcessId}`);
+  }
+
+  if (signals.length > 0) {
+    await boss.send('processActions', {});
   }
 };

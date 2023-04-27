@@ -42,8 +42,8 @@ for (const [jobName, jobFunction] of Object.entries(jobFunctions)) {
   });
 }
 
-boss.schedule('processSignals', '*/10 * * * * *');
-boss.schedule('processActions', '*/10 * * * * *');
+boss.schedule('processSignals', '* * * * * *');
+boss.schedule('processActions', '* * * * * *');
 // every hour
 boss.schedule('sendTimeSignal', '0 0 * * * *');
 

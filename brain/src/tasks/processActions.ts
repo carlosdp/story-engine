@@ -1,6 +1,6 @@
 import { Job } from 'pg-boss';
 
-import { sql } from '../db';
+import { boss, sql } from '../db';
 import logger from '../logging';
 import subsystems from '../subsystems';
 
@@ -52,5 +52,10 @@ export default async (job: Job) => {
     }
 
     logger.info(`Processed action ${processAction.id}`);
+  }
+
+  if (processActions.length > 0) {
+    await boss.send('processSignals', {});
+    await boss.send('processActions', {});
   }
 };

@@ -55,30 +55,46 @@ export abstract class LLMSubsystem implements Subsystem {
     })} returning id`;
     const thoughtProcessId = thoughtProcessRes[0].id;
 
-    const response = await rawMessage(
-      'gpt-4',
-      [...startingMessages, { role: 'system', content: 'Respond in pure JSON only' }],
-      400,
-      this.temperature
-    );
-    logger.debug(response.content);
+    let attemptsLeft = 3;
 
-    const actionCommand = JSON.parse(response.content) as ActionCommand;
+    while (attemptsLeft > 0) {
+      const debugMessages: { role: string; content: string }[] = [];
 
-    if (!actionCommand.action) {
-      logger.debug('No action, returning');
-      return thoughtProcessId;
+      const response = await rawMessage(
+        'gpt-4',
+        [...startingMessages, ...debugMessages, { role: 'system', content: 'Respond in pure JSON only' }],
+        400,
+        this.temperature
+      );
+      logger.debug(response.content);
+
+      const actionCommand = JSON.parse(response.content) as ActionCommand;
+
+      if (!actionCommand.action) {
+        logger.debug('No action, returning');
+        return thoughtProcessId;
+      }
+
+      const action = this.actions[actionCommand.action];
+
+      if (!action) {
+        logger.warn(`Invalid action: ${actionCommand.action}`);
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: `Invalid action: ${actionCommand.action}. Use only available actions.`,
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
+
+      await action.queue(thoughtProcessId, actionCommand.parameters);
+
+      startingMessages.push(response);
+
+      break;
     }
-
-    const action = this.actions[actionCommand.action];
-
-    if (!action) {
-      throw new Error(`Invalid action: ${actionCommand.action}`);
-    }
-
-    await action.queue(thoughtProcessId, actionCommand.parameters);
-
-    startingMessages.push(response);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await sql`update thought_processes set messages = ${startingMessages as any[]} where id = ${thoughtProcessId}`;
@@ -112,7 +128,10 @@ export abstract class LLMSubsystem implements Subsystem {
     const actionCommand = JSON.parse(response.content) as ActionCommand;
 
     if (!actionCommand.action) {
-      logger.debug('No action, returning');
+      logger.debug('No action, terminating');
+
+      await sql`update thought_processes set terminated_at = now() where id = ${thoughtProcessId}`;
+
       return thoughtProcessId;
     }
 
@@ -123,6 +142,76 @@ export abstract class LLMSubsystem implements Subsystem {
     }
 
     await action.queue(thoughtProcessId, actionCommand.parameters);
+
+    return thoughtProcessId;
+  }
+}
+
+export abstract class DeterministicSubsystem implements Subsystem {
+  abstract name: string;
+  abstract actions: Record<string, Action>;
+
+  getAction(name: string) {
+    return this.actions[name];
+  }
+
+  async processSignal(message: SubsystemMessage) {
+    let parentThoughtProcessId: string | null = null;
+
+    if (message.from_action_id) {
+      const actionRes = await sql`select * from thought_process_actions where id = ${message.from_action_id}`;
+      const action = actionRes[0];
+      parentThoughtProcessId = action.thought_process_id;
+    }
+
+    const thoughtProcessRes = await sql`insert into thought_processes ${sql({
+      initiating_message_id: message.id,
+      parent_thought_process_id: parentThoughtProcessId,
+      subsystem: this.name,
+      messages: [],
+    })} returning id`;
+
+    const thoughtProcessId = thoughtProcessRes[0].id;
+    const actionCommand = message.payload as ActionCommand;
+
+    if (!actionCommand.action) {
+      logger.debug('No action, returning');
+      return thoughtProcessId;
+    }
+
+    const action = this.actions[actionCommand.action];
+
+    if (!action) {
+      logger.warn(`Invalid action: ${actionCommand.action}`);
+
+      return thoughtProcessId;
+    }
+
+    await action.queue(thoughtProcessId, actionCommand.parameters);
+
+    return thoughtProcessId;
+  }
+
+  async continueProcessing(thoughtProcessId: string, completedActionId: string) {
+    const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    const initiatingSignalRes = await sql`select * from messages where id = ${thoughtProcess.initiating_message_id}`;
+    const initiatingSignal = initiatingSignalRes[0];
+
+    const actionRes = await sql`select * from thought_process_actions where id = ${completedActionId}`;
+    const completedAction = actionRes[0];
+
+    const result = completedAction.result;
+
+    await sql`insert into messages ${sql({
+      type: 'signal',
+      response_to: initiatingSignal.id,
+      direction: initiatingSignal.from_subsystem ? 'in' : 'out',
+      subsystem: initiatingSignal.from_subsystem ?? this.name,
+      from_subsystem: this.name,
+      payload: result,
+    })}`;
 
     return thoughtProcessId;
   }
