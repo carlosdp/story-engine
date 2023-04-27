@@ -95,9 +95,5 @@ class ConstructBase extends Action {
 export class Logistics extends LLMSubsystem {
   name = 'logistics';
   basePrompt = BASE_PROMPT;
-  actions = {
-    'respond-to-overlord': new RespondToOverlord(),
-    'construct-base': new ConstructBase(),
-    'resource-report': new ResourceReport(),
-  };
+  actions = [new RespondToOverlord(), new ConstructBase(), new ResourceReport()];
 }

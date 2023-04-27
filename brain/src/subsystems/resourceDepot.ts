@@ -31,7 +31,5 @@ class ResourceReport extends Action {
 
 export class ResourceDepot extends DeterministicSubsystem {
   name = 'resourceDepot';
-  actions = {
-    'resource-report': new ResourceReport(),
-  };
+  actions = [new ResourceReport()];
 }

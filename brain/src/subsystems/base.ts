@@ -13,27 +13,27 @@ export type ActionCommand = {
 export type Subsystem = {
   processSignal(message: SubsystemMessage): Promise<string>;
   continueProcessing(thoughtProcessId: string, completedActionId: string): Promise<string>;
-  getAction(name: string): Action;
+  getAction(name: string): Action | undefined;
 };
 
 export abstract class LLMSubsystem implements Subsystem {
   abstract name: string;
   abstract basePrompt: string;
-  abstract actions: Record<string, Action>;
+  abstract actions: Action[];
 
   temperature = 0.4;
 
   private cachedAvailableActions: Record<string, Action> | null = null;
 
   getAction(name: string) {
-    return this.actions[name];
+    return this.actions.find(action => action.name === name);
   }
 
   async availableActions() {
     if (!this.cachedAvailableActions) {
       // call async isAvailable for all actions
       const availableActions = await Promise.all(
-        Object.values(this.actions).map(async action => {
+        this.actions.map(async action => {
           const isAvailable = await action.isAvailable();
           return isAvailable ? action : null;
         })
@@ -156,7 +156,8 @@ export abstract class LLMSubsystem implements Subsystem {
       return thoughtProcessId;
     }
 
-    const action = this.actions[actionCommand.action];
+    const availableActions = await this.availableActions();
+    const action = availableActions[actionCommand.action];
 
     if (!action) {
       throw new Error(`Invalid action: ${actionCommand.action}`);
@@ -170,10 +171,10 @@ export abstract class LLMSubsystem implements Subsystem {
 
 export abstract class DeterministicSubsystem implements Subsystem {
   abstract name: string;
-  abstract actions: Record<string, Action>;
+  abstract actions: Action[];
 
   getAction(name: string) {
-    return this.actions[name];
+    return this.actions.find(action => action.name === name);
   }
 
   async processSignal(message: SubsystemMessage) {
@@ -200,7 +201,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
       return thoughtProcessId;
     }
 
-    const action = this.actions[actionCommand.action];
+    const action = this.getAction(actionCommand.action);
 
     if (!action) {
       logger.warn(`Invalid action: ${actionCommand.action}`);

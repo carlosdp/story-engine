@@ -145,11 +145,11 @@ class SwitchResearch extends Action {
 export class Overlord extends LLMSubsystem {
   name = 'overlord';
   basePrompt = BASE_PROMPT;
-  actions = {
-    military: new CommunicateToMilitary(),
-    logistics: new CommunicateToLogistics(),
-    intelligence: new CommunicateToIntelligence(),
-    'research-status': new ResearchStatus(),
-    'switch-research': new SwitchResearch(),
-  };
+  actions = [
+    new CommunicateToMilitary(),
+    new CommunicateToLogistics(),
+    new CommunicateToIntelligence(),
+    new ResearchStatus(),
+    new SwitchResearch(),
+  ];
 }

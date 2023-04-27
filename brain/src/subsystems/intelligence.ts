@@ -131,10 +131,6 @@ class StoreObservation extends Action {
 export class Intelligence extends LLMSubsystem {
   name = 'intelligence';
   basePrompt = BASE_PROMPT;
-  actions = {
-    'respond-to-overlord': new RespondToOverlord(),
-    'store-observation': new StoreObservation(),
-    'search-observations': new SearchObservations(),
-  };
+  actions = [new RespondToOverlord(), new StoreObservation(), new SearchObservations()];
   temperature = 0;
 }

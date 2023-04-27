@@ -80,9 +80,5 @@ class PlaceOnGuard extends Action {
 export class Military extends LLMSubsystem {
   name = 'military';
   basePrompt = BASE_PROMPT;
-  actions = {
-    'respond-to-overlord': new RespondToOverlord(),
-    'check-existing-military-assets': new CheckExistingMilitaryAssets(),
-    'place-on-guard': new PlaceOnGuard(),
-  };
+  actions = [new RespondToOverlord(), new CheckExistingMilitaryAssets(), new PlaceOnGuard()];
 }
