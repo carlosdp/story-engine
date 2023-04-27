@@ -80,11 +80,15 @@ export default async () => {
 
     const subsystem = subsystems[signal.subsystem as keyof typeof subsystems];
 
-    const thoughtProcessId = await subsystem.processSignal(signal as SubsystemMessage);
+    try {
+      const thoughtProcessId = await subsystem.processSignal(signal as SubsystemMessage);
+      await sql`update messages set acknowledged_at = now() where id = ${signal.id}`;
 
-    await sql`update messages set acknowledged_at = now() where id = ${signal.id}`;
-
-    logger.info(`Processed signal ${signal.id} with thought process ${thoughtProcessId}`);
+      logger.info(`Processed signal ${signal.id} with thought process ${thoughtProcessId}`);
+    } catch (error) {
+      const exception = error as Error;
+      logger.error(`Error processing signal ${signal.id}: ${exception.message}\n${exception.stack}`);
+    }
   }
 
   if (signals.length > 0) {

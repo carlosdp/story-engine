@@ -25,7 +25,8 @@ const wrapExceptionLog = (jobFunction: Function) => {
     try {
       return await jobFunction(...args);
     } catch (error) {
-      logger.error((error as Error).message);
+      const exception = error as Error;
+      logger.error(`${exception.message}\n${exception.stack}`);
       throw error;
     }
   };

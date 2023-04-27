@@ -48,7 +48,12 @@ export default async (job: Job) => {
       const result = await action.result(processAction.thought_process_id, processAction.parameters, actionResult.data);
       await sql`update thought_process_actions set result = ${result} where id = ${processAction.id}`;
 
-      await subsystem.continueProcessing(processAction.thought_process_id, processAction.id);
+      try {
+        await subsystem.continueProcessing(processAction.thought_process_id, processAction.id);
+      } catch (error) {
+        const exception = error as Error;
+        logger.error(`Failed to continue processing: ${exception.message}\n${exception.stack}`);
+      }
     }
 
     logger.info(`Processed action ${processAction.id}`);
