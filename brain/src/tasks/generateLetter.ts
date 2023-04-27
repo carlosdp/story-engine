@@ -70,6 +70,17 @@ export default async (job: Job<GenerateLetterJob>) => {
       insert into letters (summary, content, sender, recipient)
       values (${letter.summary}, ${letter.content}, ${job.data.sender}, ${job.data.recipient})
     `;
+    await sql`insert into messages ${sql({
+      subsystem: 'humanResources',
+      direction: 'out',
+      type: 'command',
+      payload: {
+        response: 'add_letter',
+        content: letter.content,
+        sender: job.data.sender,
+        recipient: job.data.recipient,
+      },
+    })}`;
   } catch (error) {
     logger.error(error);
   }
