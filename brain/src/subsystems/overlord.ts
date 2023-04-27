@@ -1,4 +1,7 @@
-import { SignalAction, SignalActionPayload } from '../action';
+import * as moment from 'moment';
+
+import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
+import { sql } from '../db';
 import { LLMSubsystem } from './base';
 
 // - Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
@@ -11,6 +14,7 @@ Time Left in Game: 14 days
 - When deciding to take military actions, consider the cost versus how resource usage would impact The Project. It is ok to take no action.
 - In response to either time passing, or messages from subordinate functions, decide what should be done to further the mission.
 - You should ask subordinate functions for recommendations of action and capabilities available before issuing orders.
+- You need to conduct research that takes time in order to increase capabilities.
 
 Writing Style: Short, all caps, robotic
 
@@ -81,6 +85,63 @@ class CommunicateToIntelligence extends SignalAction {
   }
 }
 
+class ResearchStatus extends Action {
+  name = 'research-status';
+  description = 'Check what is currently being researched, and what is available to research';
+  parameters = {};
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    const researchables = await sql`select * from available_researchables`;
+
+    return { status: Action.STATUS_COMPLETE, data: { researchables } };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any) {
+    const researchables = data.researchables.map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      time_left: moment(r.time_left).from(moment(), true),
+      active: r.active,
+    }));
+
+    const current = researchables.find((r: any) => r.active);
+
+    const currentResearch = current
+      ? `Current Active Research: ${JSON.stringify({
+          ...current,
+          active: undefined,
+        })}`
+      : 'No active research';
+
+    return `${currentResearch}\n\nAvailable Research:\n${JSON.stringify(
+      researchables.filter((r: any) => !r.active).map((r: any) => ({ ...r, active: undefined }))
+    )}`;
+  }
+}
+
+class SwitchResearch extends Action {
+  name = 'switch-research';
+  description = 'Switch the current active research, can only research one thing at a time';
+  parameters = {
+    research_id: { type: 'string', description: 'The research id to change to' },
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async execute(_thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    await sql`select switch_research(${parameters.research_id as string})`;
+
+    return { status: Action.STATUS_COMPLETE, data: null };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async result(_thoughtActionId: string, parameters: Record<string, unknown>, _data: any) {
+    return `Now researching ${parameters.research_id}`;
+  }
+}
+
 export class Overlord extends LLMSubsystem {
   name = 'overlord';
   basePrompt = BASE_PROMPT;
@@ -88,5 +149,7 @@ export class Overlord extends LLMSubsystem {
     military: new CommunicateToMilitary(),
     logistics: new CommunicateToLogistics(),
     intelligence: new CommunicateToIntelligence(),
+    'research-status': new ResearchStatus(),
+    'switch-research': new SwitchResearch(),
   };
 }

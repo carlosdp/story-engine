@@ -55,7 +55,7 @@ export default async (job: Job) => {
   }
 
   if (processActions.length > 0) {
-    await boss.send('processSignals', {});
-    await boss.send('processActions', {});
+    await boss.send('processSignals', {}, { singletonKey: 'processSignals' });
+    await boss.send('processActions', {}, { singletonKey: 'processActions' });
   }
 };

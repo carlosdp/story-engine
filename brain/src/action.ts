@@ -34,6 +34,22 @@ export abstract class Action {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract result(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<string>;
 
+  async isAvailable(): Promise<boolean> {
+    const required = await this.requiredResearch();
+    if (required.length === 0) {
+      return true;
+    }
+
+    const uncompletedResearch =
+      await sql`select * from available_researchables where active = true and id not in (${sql(required)})`;
+
+    return uncompletedResearch.length === 0;
+  }
+
+  async requiredResearch(): Promise<string[]> {
+    return [];
+  }
+
   serializeDefinition() {
     return `${this.name}: ${this.description}. Parameters: ${JSON.stringify(this.parameters)}`;
   }

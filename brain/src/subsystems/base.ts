@@ -23,14 +23,34 @@ export abstract class LLMSubsystem implements Subsystem {
 
   temperature = 0.4;
 
+  private cachedAvailableActions: Record<string, Action> | null = null;
+
   getAction(name: string) {
     return this.actions[name];
+  }
+
+  async availableActions() {
+    if (!this.cachedAvailableActions) {
+      // call async isAvailable for all actions
+      const availableActions = await Promise.all(
+        Object.values(this.actions).map(async action => {
+          const isAvailable = await action.isAvailable();
+          return isAvailable ? action : null;
+        })
+      );
+
+      this.cachedAvailableActions = Object.fromEntries(
+        availableActions.filter(action => action !== null).map(action => [action!.name, action!])
+      );
+    }
+
+    return this.cachedAvailableActions;
   }
 
   async processSignal(message: SubsystemMessage) {
     const basePrompt = this.basePrompt.replace(
       '{actions}',
-      Object.values(this.actions)
+      Object.values(await this.availableActions())
         .map(action => action.serializeDefinition())
         .join('\n')
     );
@@ -75,7 +95,8 @@ export abstract class LLMSubsystem implements Subsystem {
         return thoughtProcessId;
       }
 
-      const action = this.actions[actionCommand.action];
+      const availableActions = await this.availableActions();
+      const action = availableActions[actionCommand.action];
 
       if (!action) {
         logger.warn(`Invalid action: ${actionCommand.action}`);
