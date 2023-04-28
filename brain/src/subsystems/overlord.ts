@@ -106,7 +106,7 @@ class ResearchStatus extends Action {
       id: r.id,
       name: r.name,
       description: r.description,
-      time_left: moment(r.time_left).from(moment(), true),
+      time_left: moment(r.finish_time).from(moment(), true),
       active: r.active,
     }));
 

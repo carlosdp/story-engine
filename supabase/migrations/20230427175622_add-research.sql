@@ -39,17 +39,22 @@ create view completed_researchables as
 
 -- select researchables that are not completed, but their dependencies are, or they have no dependencies
 create or replace view available_researchables as
-  select researchables.*, 
+  select r.*,
          active_sessions.research_id is not null as active,
-         now() + researchables.time_required as finish_time
-  from researchables
+         now() + (r.time_required - coalesce(summed_sessions.total_time, '00:00:00'::interval)) as finish_time
+  from researchables r
   left join (
-    select research_id
+    select research_sessions.research_id
     from research_sessions
     where stopped_at is null
-  ) as active_sessions on active_sessions.research_id = researchables.id
-  where researchables.id not in (select research_id from completed_researchables)
-  and (researchables.depends_on is null or researchables.depends_on in (select research_id from completed_researchables));
+  ) as active_sessions on active_sessions.research_id = r.id
+  left join (
+    select research_sessions.research_id, sum(age(stopped_at, started_at)) as total_time
+    from research_sessions
+    group by research_sessions.research_id
+  ) as summed_sessions on summed_sessions.research_id = r.id
+  where r.id not in (select completed_researchables.id from completed_researchables)
+  and (r.depends_on is null or r.depends_on in (select completed_researchables.id from completed_researchables));
 
 -- function to switch active research, only allows it if the research is available
 create or replace function switch_research(research_id uuid) returns void as $$

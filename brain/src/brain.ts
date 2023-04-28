@@ -1,5 +1,6 @@
 import { boss } from './db';
 import logger from './logging';
+import completeResearch from './tasks/completeResearch';
 import generateCharacters from './tasks/generateCharacters';
 import generateLetter from './tasks/generateLetter';
 import processActions from './tasks/processActions';
@@ -16,6 +17,7 @@ const jobFunctions = {
   processActions: processActions,
   sendTimeSignal: sendTimeSignal,
   generateLetter: generateLetter,
+  completeResearch: completeResearch,
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -45,6 +47,7 @@ for (const [jobName, jobFunction] of Object.entries(jobFunctions)) {
 
 boss.schedule('processSignals', '* * * * * *');
 boss.schedule('processActions', '* * * * * *');
+boss.schedule('completeResearch', '* * * * * *');
 // every hour
 boss.schedule('sendTimeSignal', '0 0 * * * *');
 
