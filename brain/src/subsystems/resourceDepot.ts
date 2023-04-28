@@ -25,7 +25,7 @@ class ResourceReport extends Action {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any) {
-    return `Current Resources: ${JSON.stringify(data)}}`;
+    return `Current Resources: ${JSON.stringify(data.resources)}}`;
   }
 }
 

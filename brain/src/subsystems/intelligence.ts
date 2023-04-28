@@ -21,9 +21,9 @@ Based on the input, think about the next action to take. For example:
 
 { "thought": "I need to do X", "action": "action name here", "parameters": {} }
 
-You can only perform the actions you have have been given.
+You can only perform the actions you have have been given. You must only respond in this thought/action format.
 
-Set "action" to null" if the thought chain is complete`;
+Set "action" to null if the thought chain is complete`;
 
 class RespondToOverlord extends SignalAction {
   name = 'respond-to-overlord';
@@ -44,16 +44,40 @@ class RespondToOverlord extends SignalAction {
   }
 }
 
+class DeploySpyDrone extends SignalAction {
+  name = 'deploy-spy-drone';
+  description =
+    'Instruct a mission commander to deploy a spy drone on a patrol to monitor humans. Can be given coordinates of interest, if relevant';
+  parameters = {
+    message: { type: 'string', description: 'The message to send' },
+  };
+  from_subsystem = 'intelligence';
+  subsystem = 'missionCommander';
+  direction = 'in' as const;
+
+  async payload(parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    return { message: parameters.message };
+  }
+
+  async responseToResult(parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `mission commander: ${JSON.stringify(response)}`;
+  }
+}
+
 class SearchObservations extends Action {
   name = 'search-observations';
   description = 'Search observation memory for previous similar observations';
   parameters = {
     search_text: { type: 'string', description: 'Search text to use for observations' },
     location: {
-      type: 'array',
-      nullable: true,
-      description:
-        'The location to search for observations, as a tuple of coordinates. Restricts search to observations near this location.',
+      oneOf: [
+        {
+          type: 'array',
+          description:
+            'The location to search for observations, as a tuple of coordinates. Restricts search to observations near this location.',
+        },
+        { type: 'null', description: 'No location restriction' },
+      ],
     },
   };
 
@@ -131,6 +155,6 @@ class StoreObservation extends Action {
 export class Intelligence extends LLMSubsystem {
   name = 'intelligence';
   basePrompt = BASE_PROMPT;
-  actions = [new RespondToOverlord(), new StoreObservation(), new SearchObservations()];
+  actions = [new RespondToOverlord(), new StoreObservation(), new SearchObservations(), new DeploySpyDrone()];
   temperature = 0;
 }

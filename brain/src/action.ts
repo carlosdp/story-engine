@@ -1,3 +1,5 @@
+import { validate } from 'jsonschema';
+
 import { sql } from './db';
 import { embedding } from './utils';
 
@@ -13,7 +15,7 @@ export type ActionResult = { status: 'failed' } | { status: 'waiting' | 'complet
 export abstract class Action {
   abstract name: string;
   abstract description: string;
-  abstract parameters: Record<string, { type: string; description: string }>;
+  abstract parameters: Record<string, any>;
 
   static STATUS_COMPLETE = 'complete' as const;
   static STATUS_FAILED = 'failed' as const;
@@ -33,6 +35,15 @@ export abstract class Action {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract result(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<string>;
+
+  validate(parameters: Record<string, unknown>) {
+    const schema = {
+      type: 'object',
+      properties: this.parameters,
+    };
+
+    return validate(parameters, schema, { required: true });
+  }
 
   async isAvailable(): Promise<boolean> {
     const required = await this.requiredResearch();

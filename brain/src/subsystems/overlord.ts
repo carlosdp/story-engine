@@ -15,6 +15,7 @@ Time Left in Game: 14 days
 - In response to either time passing, or messages from subordinate functions, decide what should be done to further the mission.
 - You should ask subordinate functions for recommendations of action and capabilities available before issuing orders.
 - You need to conduct research that takes time in order to increase capabilities.
+- As time passes, it's good to check in on status of resource collection, research, and human activity on the island
 
 Writing Style: Short, all caps, robotic
 
@@ -24,6 +25,8 @@ You have several subordinate functions you can communicate with to achieve your 
 Based on the input, think about the next action to take. For example:
 
 { "thought": "I need to do X", "action": "action name here", "parameters": {} }
+
+You can only perform the actions you have have been given. You must only respond in this thought/action format.
 
 Set "action" to null if the thought chain is complete (no further action needed)`;
 
@@ -49,7 +52,7 @@ class CommunicateToMilitary extends SignalAction {
 class CommunicateToLogistics extends SignalAction {
   name = 'logistics';
   description =
-    'Communicate to Logistics subsystem, responsible for constructing and tracking bases, and gathering resources';
+    'Communicate to Logistics subsystem, responsible for constructing and tracking bases, and gathering and reporting on resources';
   parameters = {
     message: { type: 'string', description: 'The message' },
   };
@@ -68,7 +71,7 @@ class CommunicateToLogistics extends SignalAction {
 
 class CommunicateToIntelligence extends SignalAction {
   name = 'intelligence';
-  description = 'Communicate to Intelligence subsystem, responsible for tracking human activity and base locations';
+  description = 'Communicate to Intelligence subsystem, responsible for tracking human activity';
   parameters = {
     message: { type: 'string', description: 'The message' },
   };

@@ -17,9 +17,9 @@ Based on the input, think about the next action to take. For example:
 
 { "thought": "I need to do X", "action": "action name here", "parameters": {} }
 
-You can only perform the actions you have have been given.
+You can only perform the actions you have have been given. You must only respond in this thought/action format.
 
-Set "action" to null" if the thought chain is complete`;
+Set "action" to null if the thought chain is complete`;
 
 class RespondToOverlord extends SignalAction {
   name = 'respond-to-overlord';

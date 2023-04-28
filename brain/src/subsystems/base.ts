@@ -21,6 +21,7 @@ export abstract class LLMSubsystem implements Subsystem {
   abstract basePrompt: string;
   abstract actions: Action[];
 
+  model: 'gpt-3.5-turbo' | 'gpt-4' = 'gpt-4';
   temperature = 0.4;
 
   private cachedAvailableActions: Record<string, Action> | null = null;
@@ -75,47 +76,9 @@ export abstract class LLMSubsystem implements Subsystem {
     })} returning id`;
     const thoughtProcessId = thoughtProcessRes[0].id;
 
-    let attemptsLeft = 3;
+    const response = await this.processMessages(thoughtProcessId, startingMessages);
 
-    while (attemptsLeft > 0) {
-      const debugMessages: { role: string; content: string }[] = [];
-
-      const response = await rawMessage(
-        'gpt-4',
-        [...startingMessages, ...debugMessages, { role: 'system', content: 'Respond in pure JSON only' }],
-        400,
-        this.temperature
-      );
-      logger.debug(response.content);
-
-      const actionCommand = JSON.parse(response.content) as ActionCommand;
-
-      if (!actionCommand.action) {
-        logger.debug('No action, returning');
-        return thoughtProcessId;
-      }
-
-      const availableActions = await this.availableActions();
-      const action = availableActions[actionCommand.action];
-
-      if (!action) {
-        logger.warn(`Invalid action: ${actionCommand.action}`);
-
-        debugMessages.push(response, {
-          role: 'system',
-          content: `Invalid action: ${actionCommand.action}. Use only available actions.`,
-        });
-
-        attemptsLeft -= 1;
-        continue;
-      }
-
-      await action.queue(thoughtProcessId, actionCommand.parameters);
-
-      startingMessages.push(response);
-
-      break;
-    }
+    startingMessages.push(response);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await sql`update thought_processes set messages = ${startingMessages as any[]} where id = ${thoughtProcessId}`;
@@ -134,38 +97,71 @@ export abstract class LLMSubsystem implements Subsystem {
 
     messages.push({ role: 'user', content: completedAction.result });
 
-    const response = await rawMessage(
-      'gpt-4',
-      [...messages, { role: 'system', content: 'Respond in pure JSON only' }],
-      400,
-      this.temperature
-    );
-    logger.debug(response.content);
+    const response = await this.processMessages(thoughtProcessId, messages);
 
     messages.push(response);
 
     await sql`update thought_processes set messages = ${messages} where id = ${thoughtProcessId}`;
 
-    const actionCommand = JSON.parse(response.content) as ActionCommand;
-
-    if (!actionCommand.action) {
-      logger.debug('No action, terminating');
-
-      await sql`update thought_processes set terminated_at = now() where id = ${thoughtProcessId}`;
-
-      return thoughtProcessId;
-    }
-
-    const availableActions = await this.availableActions();
-    const action = availableActions[actionCommand.action];
-
-    if (!action) {
-      throw new Error(`Invalid action: ${actionCommand.action}`);
-    }
-
-    await action.queue(thoughtProcessId, actionCommand.parameters);
-
     return thoughtProcessId;
+  }
+
+  async processMessages(thoughtProcessId: string, messages: { role: string; content: string }[]) {
+    let attemptsLeft = 3;
+    const debugMessages: { role: string; content: string }[] = [];
+    let response: { role: string; content: string } = { role: 'system', content: 'No response' };
+
+    while (attemptsLeft > 0) {
+      response = await rawMessage(
+        this.model,
+        [...messages, ...debugMessages, { role: 'system', content: 'Respond in pure JSON only' }],
+        400,
+        this.temperature
+      );
+      logger.debug(response.content);
+
+      const actionCommand = JSON.parse(response.content) as ActionCommand;
+
+      if (!actionCommand.action) {
+        logger.debug('No action, returning');
+        return response;
+      }
+
+      const availableActions = await this.availableActions();
+      const action = availableActions[actionCommand.action];
+
+      if (!action) {
+        logger.warn(`Invalid action: ${actionCommand.action}`);
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: `Invalid action: ${actionCommand.action}. Use only available actions.`,
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
+
+      const validationResult = action.validate(actionCommand.parameters);
+
+      if (!validationResult.valid) {
+        logger.warn(`Invalid parameters: ${JSON.stringify(validationResult.errors)}`);
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: `Invalid action parameters: ${JSON.stringify(validationResult.errors)}. Follow the schema.`,
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
+
+      await action.queue(thoughtProcessId, actionCommand.parameters);
+
+      break;
+    }
+
+    return response;
   }
 }
 

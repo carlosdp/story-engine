@@ -2,6 +2,7 @@ import { HumanResources } from './humanResources';
 import { Intelligence } from './intelligence';
 import { Logistics } from './logistics';
 import { Military } from './military';
+import { MissionCommander } from './missionCommander';
 import { Overlord } from './overlord';
 import { ResourceDepot } from './resourceDepot';
 
@@ -12,6 +13,7 @@ const subsystems = {
   humanResources: new HumanResources(),
   intelligence: new Intelligence(),
   resourceDepot: new ResourceDepot(),
+  missionCommander: new MissionCommander(),
 };
 
 export default subsystems;
