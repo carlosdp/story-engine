@@ -368,6 +368,61 @@ export interface Database {
           user_id?: string;
         };
       };
+      research_sessions: {
+        Row: {
+          created_at: string;
+          id: string;
+          research_id: string;
+          started_at: string;
+          stopped_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          research_id: string;
+          started_at?: string;
+          stopped_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          research_id?: string;
+          started_at?: string;
+          stopped_at?: string | null;
+          updated_at?: string;
+        };
+      };
+      researchables: {
+        Row: {
+          created_at: string;
+          depends_on: string | null;
+          description: string;
+          id: string;
+          name: string;
+          time_required: unknown;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          depends_on?: string | null;
+          description: string;
+          id?: string;
+          name: string;
+          time_required: unknown;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          depends_on?: string | null;
+          description?: string;
+          id?: string;
+          name?: string;
+          time_required?: unknown;
+          updated_at?: string;
+        };
+      };
       schedule: {
         Row: {
           created_on: string;
@@ -452,32 +507,58 @@ export interface Database {
           updated_at?: string;
         };
       };
+      thought_process_messages: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          role: string;
+          thought_process_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          role: string;
+          thought_process_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          role?: string;
+          thought_process_id?: string;
+          updated_at?: string | null;
+        };
+      };
       thought_processes: {
         Row: {
           created_at: string;
           id: string;
           initiating_message_id: string;
-          messages: Json;
           parent_thought_process_id: string | null;
           subsystem: string;
+          terminated_at: string | null;
           updated_at: string;
         };
         Insert: {
           created_at?: string;
           id?: string;
           initiating_message_id: string;
-          messages: Json;
           parent_thought_process_id?: string | null;
           subsystem: string;
+          terminated_at?: string | null;
           updated_at?: string;
         };
         Update: {
           created_at?: string;
           id?: string;
           initiating_message_id?: string;
-          messages?: Json;
           parent_thought_process_id?: string | null;
           subsystem?: string;
+          terminated_at?: string | null;
           updated_at?: string;
         };
       };
@@ -500,6 +581,30 @@ export interface Database {
       };
     };
     Views: {
+      available_researchables: {
+        Row: {
+          active: boolean | null;
+          created_at: string | null;
+          depends_on: string | null;
+          description: string | null;
+          finish_time: string | null;
+          id: string | null;
+          name: string | null;
+          time_required: unknown | null;
+          updated_at: string | null;
+        };
+      };
+      completed_researchables: {
+        Row: {
+          created_at: string | null;
+          depends_on: string | null;
+          description: string | null;
+          id: string | null;
+          name: string | null;
+          time_required: unknown | null;
+          updated_at: string | null;
+        };
+      };
       queued_messages: {
         Row: {
           acknowledged_at: string | null;
@@ -575,6 +680,27 @@ export interface Database {
         };
         Returns: undefined;
       };
+      hydrated_thought_process: {
+        Args: {
+          p_thought_process_id: string;
+        };
+        Returns: {
+          item_id: string;
+          thought_process_id: string;
+          subsystem: string;
+          role: string;
+          content: string;
+          direction: Database['public']['Enums']['direction'];
+          from_subsystem: string;
+          acknowledged_at: string;
+          action_status: Database['public']['Enums']['action_status'];
+          action: string;
+          parameters: Json;
+          data: Json;
+          result: string;
+          item_created_at: string;
+        }[];
+      };
       related_characters: {
         Args: {
           p_character_id: string;
@@ -616,6 +742,12 @@ export interface Database {
           time_weight: number;
           final_weight: number;
         }[];
+      };
+      switch_research: {
+        Args: {
+          research_id: string;
+        };
+        Returns: undefined;
       };
     };
     Enums: {

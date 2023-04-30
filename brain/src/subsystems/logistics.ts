@@ -63,9 +63,13 @@ class ConstructBase extends Action {
   parameters = {
     name: { type: 'string', description: 'Give the base a unique name' },
     location: {
-      type: 'string',
-      nullable: true,
-      description: 'Build the base as close as possible to a particular location',
+      oneOf: [
+        {
+          type: 'string',
+          description: 'Build the base as close as possible to a particular location',
+        },
+        { type: 'null' },
+      ],
     },
   };
 

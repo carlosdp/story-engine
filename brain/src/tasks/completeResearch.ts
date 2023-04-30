@@ -6,10 +6,10 @@ import logger from '../logging';
 // Checks if active research is completed, and informs the Overlord
 // so it can choose a new research target.
 export default async (job: Job) => {
-  logger.debug(`Checking for completed reseach, ${job.id}`);
+  logger.debug(`Checking for completed research, ${job.id}`);
 
   const completedResearchRes =
-    await sql`select id, description from active_researchables where active = true and id in (select c.id from completed_researchables c)`;
+    await sql`select id, description from available_researchables where active = true and id in (select c.id from completed_researchables c)`;
 
   if (completedResearchRes.count > 0) {
     logger.debug('Found completed research');

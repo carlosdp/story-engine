@@ -57,12 +57,12 @@ class DeploySpyDrone extends SignalAction {
       items: { type: 'array', items: { type: 'number' }, description: 'coordinates as tuples' },
     },
   };
-  subsystem = 'military';
+  subsystem = 'intelligence';
   from_subsystem = 'missionCommander';
   direction = 'out' as const;
 
   async payload(parameters: Record<string, unknown>): Promise<SignalActionPayload> {
-    return { path: parameters.path };
+    return { action: 'deploy-spy-drone', path: parameters.path };
   }
 
   async responseToResult(_parameters: Record<string, unknown>, _response: SignalActionPayload): Promise<string> {

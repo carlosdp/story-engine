@@ -13,6 +13,14 @@ export const useThoughtProcess = (id: string) => {
         throw new Error(error.message);
       }
 
+      const { data: thoughtMessages, error: thoughtMessagesError } = await client
+        .from('thought_process_messages')
+        .select('*')
+        .eq('thought_process_id', id);
+      if (thoughtMessagesError) {
+        throw new Error(thoughtMessagesError.message);
+      }
+
       const { data: actions, error: actionsError } = await client
         .from('thought_process_actions')
         .select('*')
@@ -45,7 +53,7 @@ export const useThoughtProcess = (id: string) => {
 
       const combinedSignals = [...signals, ...responseSignals].sort((a, b) => a.created_at.localeCompare(b.created_at));
 
-      return { ...data, actions, signals: combinedSignals };
+      return { ...data, messages: thoughtMessages, actions, signals: combinedSignals };
     },
   });
 };

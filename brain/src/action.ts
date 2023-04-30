@@ -161,11 +161,12 @@ export abstract class SignalAction extends Action {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
     if (!data?.messageId) {
+      const payload = await this.payload(parameters);
       const messageId = await this.sendSignal(
         thoughtActionId,
         this.direction,
         this.subsystem,
-        await this.payload(parameters),
+        payload,
         this.from_subsystem
       );
       return { status: Action.STATUS_WAITING, data: { messageId } };

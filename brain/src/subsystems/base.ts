@@ -49,14 +49,7 @@ export abstract class LLMSubsystem implements Subsystem {
   }
 
   async processSignal(message: SubsystemMessage) {
-    const basePrompt = this.basePrompt.replace(
-      '{actions}',
-      Object.values(await this.availableActions())
-        .map(action => action.serializeDefinition())
-        .join('\n')
-    );
-    const startingMessages = [
-      { role: 'system', content: basePrompt },
+    const messages = [
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
     ];
 
@@ -72,36 +65,31 @@ export abstract class LLMSubsystem implements Subsystem {
       initiating_message_id: message.id,
       parent_thought_process_id: parentThoughtProcessId,
       subsystem: this.name,
-      messages: startingMessages,
     })} returning id`;
     const thoughtProcessId = thoughtProcessRes[0].id;
-
-    const response = await this.processMessages(thoughtProcessId, startingMessages);
-
-    startingMessages.push(response);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await sql`update thought_processes set messages = ${startingMessages as any[]} where id = ${thoughtProcessId}`;
-
-    return thoughtProcessId;
-  }
-
-  async continueProcessing(thoughtProcessId: string, completedActionId: string) {
-    const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    const messages = thoughtProcess.messages;
-
-    const actionRes = await sql`select * from thought_process_actions where id = ${completedActionId}`;
-    const completedAction = actionRes[0];
-
-    messages.push({ role: 'user', content: completedAction.result });
 
     const response = await this.processMessages(thoughtProcessId, messages);
 
     messages.push(response);
 
-    await sql`update thought_processes set messages = ${messages} where id = ${thoughtProcessId}`;
+    await this.saveMessages(thoughtProcessId, messages);
+
+    return thoughtProcessId;
+  }
+
+  async continueProcessing(thoughtProcessId: string, completedActionId: string) {
+    const previousMessages = await this.getMessages(thoughtProcessId);
+
+    const actionRes = await sql`select * from thought_process_actions where id = ${completedActionId}`;
+    const completedAction = actionRes[0];
+
+    const messages = [{ role: 'user', content: completedAction.result }];
+
+    const response = await this.processMessages(thoughtProcessId, [...previousMessages, ...messages]);
+
+    messages.push(response);
+
+    await this.saveMessages(thoughtProcessId, messages);
 
     return thoughtProcessId;
   }
@@ -111,10 +99,12 @@ export abstract class LLMSubsystem implements Subsystem {
     const debugMessages: { role: string; content: string }[] = [];
     let response: { role: string; content: string } = { role: 'system', content: 'No response' };
 
+    const baseMessage = await this.generateBaseMessage();
+
     while (attemptsLeft > 0) {
       response = await rawMessage(
         this.model,
-        [...messages, ...debugMessages, { role: 'system', content: 'Respond in pure JSON only' }],
+        [baseMessage, ...messages, ...debugMessages, { role: 'system', content: 'Respond in pure JSON only' }],
         400,
         this.temperature
       );
@@ -163,6 +153,33 @@ export abstract class LLMSubsystem implements Subsystem {
 
     return response;
   }
+
+  private async generateBaseMessage() {
+    const basePrompt = this.basePrompt.replace(
+      '{actions}',
+      Object.values(await this.availableActions())
+        .map(action => action.serializeDefinition())
+        .join('\n')
+    );
+
+    return { role: 'system', content: basePrompt };
+  }
+
+  private async saveMessages(thoughtProcessId: string, messages: { role: string; content: string }[]) {
+    await sql`insert into thought_process_messages ${sql(
+      messages.map(message => ({
+        thought_process_id: thoughtProcessId,
+        role: message.role,
+        content: message.content,
+      }))
+    )}`;
+  }
+
+  private async getMessages(thoughtProcessId: string) {
+    const messagesRes =
+      await sql`select * from thought_process_messages where thought_process_id = ${thoughtProcessId}`;
+    return messagesRes.map(message => ({ role: message.role, content: message.content }));
+  }
 }
 
 export abstract class DeterministicSubsystem implements Subsystem {
@@ -186,7 +203,6 @@ export abstract class DeterministicSubsystem implements Subsystem {
       initiating_message_id: message.id,
       parent_thought_process_id: parentThoughtProcessId,
       subsystem: this.name,
-      messages: [],
     })} returning id`;
 
     const thoughtProcessId = thoughtProcessRes[0].id;

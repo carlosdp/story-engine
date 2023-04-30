@@ -30,11 +30,7 @@ export default async (job: Job) => {
       continue;
     }
 
-    logger.debug('Executing action');
-
     const actionResult = await action.execute(processAction.id, processAction.parameters, processAction.data);
-
-    logger.debug(`Action result: ${JSON.stringify(actionResult)} ${actionResult.status}`);
 
     if (actionResult.status === 'failed') {
       logger.error(`Action failed: ${processAction.action}`);
@@ -45,6 +41,7 @@ export default async (job: Job) => {
     await sql`update thought_process_actions set status = ${actionResult.status}, data = ${actionResult.data} where id = ${processAction.id}`;
 
     if (actionResult.status === 'complete') {
+      logger.debug(`Action result: ${JSON.stringify(actionResult)} ${actionResult.status}`);
       const result = await action.result(processAction.thought_process_id, processAction.parameters, actionResult.data);
       await sql`update thought_process_actions set result = ${result} where id = ${processAction.id}`;
 
@@ -56,7 +53,7 @@ export default async (job: Job) => {
       }
     }
 
-    logger.info(`Processed action ${processAction.id}`);
+    logger.debug(`Processed action ${processAction.id}`);
   }
 
   if (processActions.length > 0) {

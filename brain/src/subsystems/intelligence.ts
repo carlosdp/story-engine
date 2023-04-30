@@ -108,12 +108,22 @@ class StoreObservation extends Action {
   description = 'Store an observation for later recall';
   parameters = {
     text: { type: 'string', description: 'The text of the observation' },
-    location: { type: 'array', description: 'The location of the observation, as a tuple of coordinates, can be null' },
+    location: {
+      oneOf: [
+        { type: 'array', description: 'The location of the observation, as a tuple of coordinates, can be null' },
+        { type: 'null' },
+      ],
+    },
     update_to: {
-      type: 'string',
-      nullable: true,
-      description:
-        'If this observation updates information in a previous one, the id of the observation it is updating',
+      oneOf: [
+        {
+          type: 'string',
+          nullable: true,
+          description:
+            'If this observation updates information in a previous one, the id of the observation it is updating',
+        },
+        { type: 'null' },
+      ],
     },
   };
 
