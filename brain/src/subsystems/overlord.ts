@@ -2,6 +2,7 @@ import * as moment from 'moment';
 
 import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
+import logger from '../logging';
 import { LLMSubsystem } from './base';
 
 // - Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
@@ -94,8 +95,17 @@ class ResearchStatus extends Action {
   parameters = {};
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
-    const researchables = await sql`select * from available_researchables`;
+  async execute(thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    const thoughtProcessRes =
+      await sql`select world_id from thought_processes left join thought_process_actions on thought_processes.id = thought_process_actions.thought_process_id where thought_process_actions.id = ${thoughtActionId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess) {
+      logger.error('No thought process found for thought action', { thoughtActionId });
+      return { status: 'failed' };
+    }
+
+    const researchables = await sql`select * from available_researchables where world_id = ${thoughtProcess.world_id}`;
 
     return { status: Action.STATUS_COMPLETE, data: { researchables } };
   }
@@ -145,6 +155,95 @@ class SwitchResearch extends Action {
   }
 }
 
+class CurrentDefenseLevel extends SignalAction {
+  name = 'current-defense-level';
+  description =
+    'Get the current defense level. 0 = attack only if attacked, 1 = attack anyone with a weapon, 2 = attack on sight, 3 = hunt and kill any human';
+  parameters = {};
+
+  from_subsystem = 'overlord';
+  subsystem = 'overlord';
+  direction = 'out' as const;
+
+  async payload(_parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    return { action: 'current-defense-level' };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Current Defense Level: ${response.defenseLevel}`;
+  }
+}
+
+class ChangeDefenseLevel extends SignalAction {
+  name = 'change-defense-level';
+  description =
+    'Change the defense level of your armed assets in relation to humans. 0 = attack only if attacked, 1 = attack anyone with a weapon, 2 = attack on sight, 3 = hunt and kill any human. Can only be incremented by 1 at a time, but can be decremented as much as needed.';
+  parameters = {
+    level: { type: 'number', description: 'The new level' },
+  };
+
+  from_subsystem = 'overlord';
+  subsystem = 'overlord';
+  direction = 'out' as const;
+
+  async payload(parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    return { action: 'change-defense-level', defenseLevel: parameters.level };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Defense Level set to ${response.defenseLevel}`;
+  }
+}
+
+class GetHumanRelation extends SignalAction {
+  name = 'get-human-relation';
+  description = 'Get current relation setting with a human';
+  parameters = {
+    id: { type: 'string', description: 'The human ID' },
+  };
+
+  from_subsystem = 'overlord';
+  subsystem = 'overlord';
+  direction = 'out' as const;
+
+  async payload(parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    const id = (parameters.id as string).replaceAll('Human', '').trim();
+
+    return { action: 'get-human-relation', id };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Current relation: ${response.relation}`;
+  }
+}
+
+class SetHumanRelation extends SignalAction {
+  name = 'set-human-relation';
+  description = 'Set relation setting with a human';
+  parameters = {
+    id: { type: 'string', description: 'The human ID' },
+    relation: {
+      type: 'string',
+      description: 'The new relation',
+      enum: ['neutral', 'friendly', 'ally', 'hostile', 'hunt-to-kill'],
+    },
+  };
+
+  from_subsystem = 'overlord';
+  subsystem = 'overlord';
+  direction = 'out' as const;
+
+  async payload(parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    const id = (parameters.id as string).replaceAll('Human', '').trim();
+
+    return { action: 'set-human-relation', id, relation: parameters.relation as string };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, _response: SignalActionPayload): Promise<string> {
+    return `New relation set`;
+  }
+}
+
 export class Overlord extends LLMSubsystem {
   name = 'overlord';
   basePrompt = BASE_PROMPT;
@@ -154,5 +253,9 @@ export class Overlord extends LLMSubsystem {
     new CommunicateToIntelligence(),
     new ResearchStatus(),
     new SwitchResearch(),
+    new CurrentDefenseLevel(),
+    new ChangeDefenseLevel(),
+    new GetHumanRelation(),
+    new SetHumanRelation(),
   ];
 }

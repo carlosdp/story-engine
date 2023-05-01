@@ -138,6 +138,7 @@ export interface Database {
           rust_npc_type: string;
           title: string | null;
           updated_at: string;
+          world_id: string;
           writing_style: string;
         };
         Insert: {
@@ -152,6 +153,7 @@ export interface Database {
           rust_npc_type: string;
           title?: string | null;
           updated_at?: string;
+          world_id: string;
           writing_style: string;
         };
         Update: {
@@ -166,6 +168,7 @@ export interface Database {
           rust_npc_type?: string;
           title?: string | null;
           updated_at?: string;
+          world_id?: string;
           writing_style?: string;
         };
       };
@@ -243,6 +246,7 @@ export interface Database {
           sender: string;
           summary: string | null;
           updated_at: string;
+          world_id: string;
         };
         Insert: {
           content: string;
@@ -252,6 +256,7 @@ export interface Database {
           sender: string;
           summary?: string | null;
           updated_at?: string;
+          world_id: string;
         };
         Update: {
           content?: string;
@@ -261,6 +266,7 @@ export interface Database {
           sender?: string;
           summary?: string | null;
           updated_at?: string;
+          world_id?: string;
         };
       };
       messages: {
@@ -276,6 +282,7 @@ export interface Database {
           subsystem: string;
           type: Database['public']['Enums']['message_type'];
           updated_at: string;
+          world_id: string;
         };
         Insert: {
           acknowledged_at?: string | null;
@@ -289,6 +296,7 @@ export interface Database {
           subsystem: string;
           type: Database['public']['Enums']['message_type'];
           updated_at?: string;
+          world_id: string;
         };
         Update: {
           acknowledged_at?: string | null;
@@ -302,6 +310,7 @@ export interface Database {
           subsystem?: string;
           type?: Database['public']['Enums']['message_type'];
           updated_at?: string;
+          world_id?: string;
         };
       };
       observations: {
@@ -314,6 +323,7 @@ export interface Database {
           text: string;
           updated_at: string;
           updated_observation_id: string | null;
+          world_id: string;
         };
         Insert: {
           created_at?: string;
@@ -324,6 +334,7 @@ export interface Database {
           text: string;
           updated_at?: string;
           updated_observation_id?: string | null;
+          world_id: string;
         };
         Update: {
           created_at?: string;
@@ -334,6 +345,7 @@ export interface Database {
           text?: string;
           updated_at?: string;
           updated_observation_id?: string | null;
+          world_id?: string;
         };
       };
       profiles: {
@@ -403,6 +415,7 @@ export interface Database {
           name: string;
           time_required: unknown;
           updated_at: string;
+          world_id: string;
         };
         Insert: {
           created_at?: string;
@@ -412,6 +425,7 @@ export interface Database {
           name: string;
           time_required: unknown;
           updated_at?: string;
+          world_id: string;
         };
         Update: {
           created_at?: string;
@@ -421,6 +435,7 @@ export interface Database {
           name?: string;
           time_required?: unknown;
           updated_at?: string;
+          world_id?: string;
         };
       };
       schedule: {
@@ -514,7 +529,7 @@ export interface Database {
           id: string;
           role: string;
           thought_process_id: string;
-          updated_at: string | null;
+          updated_at: string;
         };
         Insert: {
           content: string;
@@ -522,7 +537,7 @@ export interface Database {
           id?: string;
           role: string;
           thought_process_id: string;
-          updated_at?: string | null;
+          updated_at?: string;
         };
         Update: {
           content?: string;
@@ -530,7 +545,7 @@ export interface Database {
           id?: string;
           role?: string;
           thought_process_id?: string;
-          updated_at?: string | null;
+          updated_at?: string;
         };
       };
       thought_processes: {
@@ -542,6 +557,7 @@ export interface Database {
           subsystem: string;
           terminated_at: string | null;
           updated_at: string;
+          world_id: string;
         };
         Insert: {
           created_at?: string;
@@ -551,6 +567,7 @@ export interface Database {
           subsystem: string;
           terminated_at?: string | null;
           updated_at?: string;
+          world_id: string;
         };
         Update: {
           created_at?: string;
@@ -560,6 +577,7 @@ export interface Database {
           subsystem?: string;
           terminated_at?: string | null;
           updated_at?: string;
+          world_id?: string;
         };
       };
       version: {
@@ -577,6 +595,35 @@ export interface Database {
           cron_on?: string | null;
           maintained_on?: string | null;
           version?: number;
+        };
+      };
+      worlds: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          settings: Json;
+          state: Json;
+          type: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          settings?: Json;
+          state?: Json;
+          type: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          settings?: Json;
+          state?: Json;
+          type?: string;
+          updated_at?: string;
         };
       };
     };
@@ -679,27 +726,6 @@ export interface Database {
           ids: string[];
         };
         Returns: undefined;
-      };
-      hydrated_thought_process: {
-        Args: {
-          p_thought_process_id: string;
-        };
-        Returns: {
-          item_id: string;
-          thought_process_id: string;
-          subsystem: string;
-          role: string;
-          content: string;
-          direction: Database['public']['Enums']['direction'];
-          from_subsystem: string;
-          acknowledged_at: string;
-          action_status: Database['public']['Enums']['action_status'];
-          action: string;
-          parameters: Json;
-          data: Json;
-          result: string;
-          item_created_at: string;
-        }[];
       };
       related_characters: {
         Args: {

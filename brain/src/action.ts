@@ -45,14 +45,22 @@ export abstract class Action {
     return validate(parameters, schema, { required: true });
   }
 
-  async isAvailable(): Promise<boolean> {
+  async isAvailable(thoughtProcessId: string): Promise<boolean> {
     const required = await this.requiredResearch();
     if (required.length === 0) {
       return true;
     }
 
-    const uncompletedResearch =
-      await sql`select * from available_researchables where active = true and id not in (${sql(required)})`;
+    const thoughtProcessRes = await sql`select world_id from thought_processes where id = ${thoughtProcessId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess) {
+      throw new Error(`Thought process ${thoughtProcessId} not found`);
+    }
+
+    const uncompletedResearch = await sql`select * from available_researchables where world_id = ${
+      thoughtProcess.world_id
+    } and active = true and id not in (${sql(required)})`;
 
     return uncompletedResearch.length === 0;
   }
@@ -73,7 +81,16 @@ export abstract class Action {
     payload: any,
     from_subsystem: string | null = null
   ) {
+    const thoughtProcessRes =
+      await sql`select world_id from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess) {
+      throw new Error(`Thought process not found for action ${thoughtActionId}`);
+    }
+
     const messageRes = await sql`insert into messages ${sql({
+      world_id: thoughtProcess.world_id,
       type: 'command',
       direction,
       from_subsystem,
@@ -127,11 +144,20 @@ export abstract class Action {
     return message.payload;
   }
 
-  protected async saveObservation(observation: Observation) {
+  protected async saveObservation(thoughtActionId: string, observation: Observation) {
+    const thoughtProcessRes =
+      await sql`select world_id from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess) {
+      throw new Error(`Thought process not found for action ${thoughtActionId}`);
+    }
+
     const embed = await embedding(observation.text);
 
     const rows = await sql`
       insert into observations ${sql({
+        world_id: thoughtProcess.world_id,
         ...observation,
         embedding: JSON.stringify(embed),
         location:

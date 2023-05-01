@@ -67,10 +67,11 @@ export default async (job: Job<GenerateLetterJob>) => {
     const letter = JSON.parse(response);
     logger.debug('message received:', letter.summary);
     await sql`
-      insert into letters (summary, content, sender, recipient)
-      values (${letter.summary}, ${letter.content}, ${job.data.sender}, ${job.data.recipient})
+      insert into letters (world_id, summary, content, sender, recipient)
+      values (${job.data.worldId}, ${letter.summary}, ${letter.content}, ${job.data.sender}, ${job.data.recipient})
     `;
     await sql`insert into messages ${sql({
+      world_id: job.data.worldId,
       subsystem: 'humanResources',
       direction: 'out',
       type: 'command',

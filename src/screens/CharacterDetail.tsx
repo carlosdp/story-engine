@@ -43,7 +43,7 @@ export const CharacterDetail = () => {
       <Flex flexDirection="column" gap="32px">
         <Breadcrumb>
           <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/characters">
+            <BreadcrumbLink as={Link} to={`/worlds/${character.world_id}/characters`}>
               Characters
             </BreadcrumbLink>
           </BreadcrumbItem>

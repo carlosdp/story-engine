@@ -30,12 +30,12 @@ export abstract class LLMSubsystem implements Subsystem {
     return this.actions.find(action => action.name === name);
   }
 
-  async availableActions() {
+  async availableActions(thoughtProcessId: string) {
     if (!this.cachedAvailableActions) {
       // call async isAvailable for all actions
       const availableActions = await Promise.all(
         this.actions.map(async action => {
-          const isAvailable = await action.isAvailable();
+          const isAvailable = await action.isAvailable(thoughtProcessId);
           return isAvailable ? action : null;
         })
       );
@@ -62,6 +62,7 @@ export abstract class LLMSubsystem implements Subsystem {
     }
 
     const thoughtProcessRes = await sql`insert into thought_processes ${sql({
+      world_id: message.world_id,
       initiating_message_id: message.id,
       parent_thought_process_id: parentThoughtProcessId,
       subsystem: this.name,
@@ -99,7 +100,7 @@ export abstract class LLMSubsystem implements Subsystem {
     const debugMessages: { role: string; content: string }[] = [];
     let response: { role: string; content: string } = { role: 'system', content: 'No response' };
 
-    const baseMessage = await this.generateBaseMessage();
+    const baseMessage = await this.generateBaseMessage(thoughtProcessId);
 
     while (attemptsLeft > 0) {
       response = await rawMessage(
@@ -112,12 +113,12 @@ export abstract class LLMSubsystem implements Subsystem {
 
       const actionCommand = JSON.parse(response.content) as ActionCommand;
 
-      if (!actionCommand.action) {
+      if (!actionCommand.action || actionCommand.action === 'null') {
         logger.debug('No action, returning');
         return response;
       }
 
-      const availableActions = await this.availableActions();
+      const availableActions = await this.availableActions(thoughtProcessId);
       const action = availableActions[actionCommand.action];
 
       if (!action) {
@@ -154,10 +155,10 @@ export abstract class LLMSubsystem implements Subsystem {
     return response;
   }
 
-  private async generateBaseMessage() {
+  private async generateBaseMessage(thoughtProcessId: string) {
     const basePrompt = this.basePrompt.replace(
       '{actions}',
-      Object.values(await this.availableActions())
+      Object.values(await this.availableActions(thoughtProcessId))
         .map(action => action.serializeDefinition())
         .join('\n')
     );
@@ -200,6 +201,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
     }
 
     const thoughtProcessRes = await sql`insert into thought_processes ${sql({
+      world_id: message.world_id,
       initiating_message_id: message.id,
       parent_thought_process_id: parentThoughtProcessId,
       subsystem: this.name,
@@ -239,6 +241,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
     const result = completedAction.result;
 
     await sql`insert into messages ${sql({
+      world_id: thoughtProcess.world_id,
       type: 'signal',
       response_to: initiatingSignal.id,
       direction: initiatingSignal.from_subsystem ? 'in' : 'out',

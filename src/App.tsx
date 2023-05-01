@@ -36,16 +36,16 @@ function App() {
         <Route element={<AuthenticatedRoutes />}>
           <Route path="/" element={<Register />} />
           <Route element={<StaffRoutes />}>
-            <Route path="/characters" element={<CharacterList />} />
-            <Route path="/generate-characters" element={<GenerateCharacters />} />
+            <Route path="/worlds/:worldId/characters" element={<CharacterList />} />
+            <Route path="/worlds/:worldId/generate-characters" element={<GenerateCharacters />} />
             <Route path="/characters/:id" element={<CharacterDetail />} />
-            <Route path="/thought_processes" element={<ThoughtProcesses />} />
+            <Route path="/worlds/:worldId/thought_processes" element={<ThoughtProcesses />} />
             <Route path="/thought_processes/:id" element={<ThoughtProcessDetails />} />
-            <Route path="/send-signals" element={<MockSignals />} />
-            <Route path="/letters" element={<LetterList />} />
-            <Route path="/generate-letter" element={<GenerateLetter />} />
+            <Route path="/worlds/:worldId/send-signals" element={<MockSignals />} />
+            <Route path="/worlds/:worldId/letters" element={<LetterList />} />
+            <Route path="/worlds/:worldId/generate-letter" element={<GenerateLetter />} />
             <Route path="/letters/:id" element={<LetterDetail />} />
-            <Route path="/observations" element={<Observations />} />
+            <Route path="/worlds/:worldId/observations" element={<Observations />} />
           </Route>
         </Route>
       </Routes>

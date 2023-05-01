@@ -1,11 +1,12 @@
 import { Badge, Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { PageContainer } from '../components/PageContainer';
 import { useCharacters } from '../hooks/useCharacters';
 
 export const CharacterList = () => {
-  const { data: characters, isLoading } = useCharacters();
+  const { worldId } = useParams<{ worldId: string }>();
+  const { data: characters, isLoading } = useCharacters(worldId!);
 
   if (isLoading) {
     return (

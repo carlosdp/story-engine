@@ -38,7 +38,7 @@ export const LetterDetail = () => {
     })();
   }, [letter, client]);
 
-  if (isLoading || !letterWithSenders) {
+  if (isLoading || !letter || !letterWithSenders) {
     return (
       <Center>
         <Spinner size="lg" />
@@ -51,7 +51,7 @@ export const LetterDetail = () => {
       <Flex flexDirection="column" gap="32px">
         <Breadcrumb>
           <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/letters">
+            <BreadcrumbLink as={Link} to={`/worlds/${letter.world_id}/letters`}>
               Letters
             </BreadcrumbLink>
           </BreadcrumbItem>

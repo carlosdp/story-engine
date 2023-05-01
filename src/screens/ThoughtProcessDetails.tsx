@@ -87,7 +87,7 @@ export const ThoughtProcessDetails = () => {
       <Flex flexDirection="column" gap="32px">
         <Breadcrumb>
           <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/thought_processes">
+            <BreadcrumbLink as={Link} to={`/worlds/${thoughtProcess.world_id}/thought_processes`}>
               Thought Processes
             </BreadcrumbLink>
           </BreadcrumbItem>

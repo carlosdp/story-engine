@@ -1,13 +1,14 @@
 import { Badge, Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import { useSupabase } from '../SupabaseProvider';
 import { PageContainer } from '../components/PageContainer';
 import { useLetters } from '../hooks/useLetters';
 
 export const LetterList = () => {
-  const { data: letters, isLoading } = useLetters();
+  const { worldId } = useParams<{ worldId: string }>();
+  const { data: letters, isLoading } = useLetters(worldId!);
   const { client } = useSupabase();
   const [lettersWithSenders, setLettersWithSenders] = useState<any[]>();
 

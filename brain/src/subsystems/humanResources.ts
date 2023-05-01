@@ -41,6 +41,7 @@ export class HumanResources implements Subsystem {
       logger.debug(`Allocated ${JSON.stringify(Object.values(characters).length)} characters, sending to Rust`);
 
       await sql`insert into messages ${sql({
+        world_id: message.world_id,
         subsystem: 'humanResources',
         direction: 'out',
         type: 'command',

@@ -1,11 +1,13 @@
 import { Center, Flex } from '@chakra-ui/react';
+import { useParams } from 'react-router-dom';
 
 import { PageContainer } from '../components/PageContainer';
 import { RustMap } from '../components/RustMap';
 import { useObservations } from '../hooks/useObservations';
 
 export const Observations = () => {
-  const { data: observations } = useObservations();
+  const { worldId } = useParams<{ worldId: string }>();
+  const { data: observations } = useObservations(worldId!);
 
   return (
     <PageContainer>

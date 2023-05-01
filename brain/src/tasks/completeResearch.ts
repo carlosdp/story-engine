@@ -17,6 +17,7 @@ export default async (job: Job) => {
     const completedResearch = completedResearchRes[0];
 
     await sql`insert into messages ${sql({
+      world_id: completedResearch.world_id,
       type: 'signal',
       direction: 'in',
       subsystem: 'overlord',

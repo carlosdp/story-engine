@@ -139,7 +139,7 @@ class StoreObservation extends Action {
         }
       }
 
-      const observationId = await this.saveObservation({
+      const observationId = await this.saveObservation(thoughtActionId, {
         subsystem: 'intelligence',
         text: parameters.text as string,
         location: parameters.location as number[] | null,

@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { PageContainer } from '../components/PageContainer';
 import { useCharacters } from '../hooks/useCharacters';
@@ -26,18 +26,20 @@ type LetterJob = {
 };
 
 export const GenerateLetter = () => {
+  const { worldId } = useParams<{ worldId: string }>();
   const navigate = useNavigate();
   const { register, handleSubmit, formState } = useForm<LetterJob>({});
   const { create } = useCreateJob();
   const toast = useToast();
 
-  const { data: characters, isLoading } = useCharacters();
+  const { data: characters, isLoading } = useCharacters(worldId!);
 
   const onSubmit: SubmitHandler<LetterJob> = useCallback(
     async data => {
       await create({
         name: 'generateLetter',
         data: {
+          worldId: worldId!,
           sender: data.sender,
           recipient: data.recipient,
           prompt: data.prompt,
@@ -52,7 +54,7 @@ export const GenerateLetter = () => {
       });
       navigate('/');
     },
-    [create, toast, navigate]
+    [create, toast, navigate, worldId]
   );
   if (isLoading) {
     return (

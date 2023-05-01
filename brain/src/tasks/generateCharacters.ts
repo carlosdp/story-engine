@@ -130,8 +130,8 @@ export default async (job: Job<GenerateCharactersJob>) => {
 
     const character = JSON.parse(response);
     await sql`
-      INSERT INTO characters (title, first_name, last_name, backstory, personality, writing_style, rust_npc_type)
-      VALUES (${character.title}, ${character.first_name}, ${character.last_name}, ${character.backstory}, ${character.personality}, ${character.writing_style}, ${job.data.rustNpcType})
+      INSERT INTO characters (world_id, title, first_name, last_name, backstory, personality, writing_style, rust_npc_type)
+      VALUES (${job.data.worldId}, ${character.title}, ${character.first_name}, ${character.last_name}, ${character.backstory}, ${character.personality}, ${character.writing_style}, ${job.data.rustNpcType})
     `;
   }
 

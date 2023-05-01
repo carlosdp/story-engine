@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { PageContainer } from '../components/PageContainer';
 import { useCreateJob } from '../hooks/useCreateJob';
@@ -28,6 +28,7 @@ type CharacterJob = {
 };
 
 export const GenerateCharacters = () => {
+  const { worldId } = useParams<{ worldId: string }>();
   const navigate = useNavigate();
   const { register, handleSubmit, formState } = useForm<CharacterJob>({
     defaultValues: {
@@ -42,6 +43,7 @@ export const GenerateCharacters = () => {
       await create({
         name: 'generateCharacters',
         data: {
+          worldId: worldId!,
           count: data.count,
           rustNpcType: data.rustNpcType,
           prompt: data.prompt,
@@ -56,7 +58,7 @@ export const GenerateCharacters = () => {
       });
       navigate('/characters');
     },
-    [create, toast, navigate]
+    [create, toast, navigate, worldId]
   );
 
   return (

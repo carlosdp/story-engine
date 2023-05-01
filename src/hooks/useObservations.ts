@@ -2,15 +2,16 @@ import { useQuery } from 'react-query';
 
 import { useSupabase } from '../SupabaseProvider';
 
-export const useObservations = () => {
+export const useObservations = (worldId: string) => {
   const { client } = useSupabase();
 
   return useQuery({
-    queryKey: ['observations'],
+    queryKey: ['observations', worldId],
     queryFn: async () => {
       const { data, error } = await client
         .from('observations')
         .select('id, subsystem, text, location, created_at')
+        .eq('world_id', worldId)
         .is('updated_observation_id', null);
       if (error) {
         throw new Error(error.message);
