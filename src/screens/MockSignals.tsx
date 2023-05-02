@@ -23,6 +23,7 @@ export const MockSignals = () => {
       status: 'success',
       description: 'Manually sent a passage of time signal to the Overlord subsystem',
       duration: 5000,
+      isClosable: true,
     });
   }, [client, toast, worldId]);
 

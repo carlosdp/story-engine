@@ -247,7 +247,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
       direction: initiatingSignal.from_subsystem ? 'in' : 'out',
       subsystem: initiatingSignal.from_subsystem ?? this.name,
       from_subsystem: this.name,
-      payload: result,
+      payload: initiatingSignal.from_subsystem ? result : JSON.parse(result),
     })}`;
 
     return thoughtProcessId;

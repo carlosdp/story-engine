@@ -45,15 +45,15 @@ class ResourceReport extends SignalAction {
   description = 'Get a report on resource stockpiles';
   parameters = {};
   from_subsystem = 'logistics';
-  subsystem = 'resourceDepot';
-  direction = 'in' as const;
+  subsystem = 'logistics';
+  direction = 'out' as const;
 
   async payload(_parameters: Record<string, unknown>): Promise<SignalActionPayload> {
-    return { action: 'resource-report', parameters: {} };
+    return { action: 'stored-resources' };
   }
 
   async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
-    return JSON.stringify(response);
+    return `Current Resources: ${JSON.stringify(response.resources)}}`;
   }
 }
 

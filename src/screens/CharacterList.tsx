@@ -19,7 +19,7 @@ export const CharacterList = () => {
   return (
     <PageContainer>
       <Box>
-        <Button as={Link} to="/generate-characters">
+        <Button as={Link} to={`/worlds/${worldId}/generate-characters`}>
           Generate
         </Button>
       </Box>

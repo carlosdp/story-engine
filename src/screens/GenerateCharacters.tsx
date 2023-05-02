@@ -56,7 +56,7 @@ export const GenerateCharacters = () => {
         duration: 9000,
         isClosable: true,
       });
-      navigate('/characters');
+      navigate(`/worlds/${worldId}/characters`);
     },
     [create, toast, navigate, worldId]
   );

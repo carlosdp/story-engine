@@ -1,65 +1,57 @@
-import { Action } from '../action';
+import { Action, ActionResult } from '../action';
 import { sql } from '../db';
 import logger from '../logging';
-import { SubsystemMessage } from '../signal';
-import { Subsystem } from './base';
+import { DeterministicSubsystem } from './base';
 
-export class HumanResources implements Subsystem {
-  async processSignal(message: SubsystemMessage): Promise<string> {
-    logger.debug('HumanResources processing signal');
-    if (message.payload.request === 'allocate_characters') {
-      logger.debug('HumanResources allocating');
-      const { typeCounts } = message.payload;
-      logger.debug(`Allocating ${JSON.stringify(typeCounts)} characters`);
+class AllocateCharacters extends Action {
+  name = 'allocate-characters';
+  description = 'Allocate characters to Rust';
+  parameters = {
+    typeCounts: {
+      type: 'object',
+    },
+    required: ['typeCounts'],
+  };
 
-      const characters = await sql.begin(async tSql => {
-        const results: Record<string, { id: string; name: string }[]> = {};
-        let characterIds: string[] = [];
+  async execute(_thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    const typeCounts = parameters.typeCounts as Record<string, number>;
+    logger.debug(`Allocating ${JSON.stringify(typeCounts)} characters`);
 
-        for (const [type, count] of Object.entries(typeCounts)) {
-          const characterRes =
-            await tSql`select * from characters where rust_npc_type = ${type} and allocated = false and deceased = false limit ${
-              count as number
-            }`;
-          logger.debug(`Chose ${characterRes.length} ${type} characters`);
+    const characters = await sql.begin(async tSql => {
+      const results: Record<string, { id: string; name: string }[]> = {};
+      let characterIds: string[] = [];
 
-          results[type] = characterRes.map(character => ({
-            id: character.id,
-            name: `${character.title ? character.title + ' ' : ''}${character.first_name} ${character.last_name}`,
-          }));
+      for (const [type, count] of Object.entries(typeCounts)) {
+        const characterRes =
+          await tSql`select * from characters where rust_npc_type = ${type} and allocated = false and deceased = false limit ${
+            count as number
+          }`;
+        logger.debug(`Chose ${characterRes.length} ${type} characters`);
 
-          characterIds = [...characterIds, ...characterRes.map(character => character.id)];
-        }
+        results[type] = characterRes.map(character => ({
+          id: character.id,
+          name: `${character.title ? character.title + ' ' : ''}${character.first_name} ${character.last_name}`,
+        }));
 
-        logger.debug('Updating allocation statuses');
-        await tSql`update characters set allocated = true where id = any(${characterIds})`;
-        logger.debug('Allocation statuses updated');
+        characterIds = [...characterIds, ...characterRes.map(character => character.id)];
+      }
 
-        return results;
-      });
+      await tSql`update characters set allocated = true where id = any(${characterIds})`;
 
-      logger.debug(`Allocated ${JSON.stringify(Object.values(characters).length)} characters, sending to Rust`);
+      return results;
+    });
 
-      await sql`insert into messages ${sql({
-        world_id: message.world_id,
-        subsystem: 'humanResources',
-        direction: 'out',
-        type: 'command',
-        payload: {
-          request: 'allocate_characters',
-          characters,
-        },
-      })}`;
-    }
+    logger.debug(`Allocated ${JSON.stringify(Object.values(characters).length)} characters, sending to Rust`);
 
-    return '';
+    return { status: 'complete', data: characters };
   }
 
-  async continueProcessing(_thoughtProcessId: string, _completedActionId: string): Promise<string> {
-    throw new Error('Method not implemented.');
+  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
+    return JSON.stringify(data);
   }
+}
 
-  getAction(_name: string): Action {
-    throw new Error('Method not implemented.');
-  }
+export class HumanResources extends DeterministicSubsystem {
+  name = 'humanResources';
+  actions = [new AllocateCharacters()];
 }
