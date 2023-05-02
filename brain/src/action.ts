@@ -13,6 +13,8 @@ export type Observation = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ActionResult = { status: 'failed' } | { status: 'waiting' | 'complete'; data: any };
 
+export type RustResources = { wood?: number; stone?: number; metal?: number; sulfur?: number; hqm?: number };
+
 export abstract class Action {
   abstract name: string;
   abstract description: string;
@@ -160,6 +162,34 @@ export abstract class Action {
     `;
 
     return rows[0].id;
+  }
+
+  protected async consumeResources(
+    thoughtActionId: string,
+    data: any,
+    resources: RustResources
+  ): Promise<ActionResult> {
+    if (!data.resourceConsumptionMessageId) {
+      const messageId = await this.sendSignal(
+        thoughtActionId,
+        'out',
+        'logistics',
+        { action: 'consume-resources', resources },
+        'logistics'
+      );
+
+      return { status: Action.STATUS_WAITING, data: { resourceConsumptionMessageId: messageId } };
+    }
+
+    const response = await this.getSignalResponse(data.resourceConsumptionMessageId);
+
+    if (!response) {
+      return { status: Action.STATUS_WAITING, data };
+    }
+
+    const { success } = response;
+
+    return success ? { status: Action.STATUS_COMPLETE, data } : { status: Action.STATUS_FAILED };
   }
 }
 

@@ -1,3 +1,5 @@
+import * as moment from 'moment';
+
 import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import logger from '../logging';
@@ -87,7 +89,7 @@ class SearchObservations extends Action {
       let location = parameters.location as [number, number] | null;
       location = location && location.length > 1 ? [location[0], location[location.length - 1]] : null;
 
-      const rows = await sql`select id, text, location from search_observations(${JSON.stringify(
+      const rows = await sql`select id, text, location, created_at from search_observations(${JSON.stringify(
         embed
       )}, ${location}, 0.1, 0.7, 100.0) where updated_observation_id is null limit 10`;
 
@@ -98,8 +100,12 @@ class SearchObservations extends Action {
     }
   }
 
-  async result(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<string> {
-    return data.length > 0 ? `Results: ${JSON.stringify(data)}` : 'No observations found';
+  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
+    return data.length > 0
+      ? `Results: ${JSON.stringify(
+          data.map((r: any) => ({ ...r, created_at: undefined, when: moment(r.created_at).fromNow() }))
+        )}`
+      : 'No observations found';
   }
 }
 
@@ -157,7 +163,7 @@ class StoreObservation extends Action {
     }
   }
 
-  async result(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<string> {
+  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
     return data;
   }
 }

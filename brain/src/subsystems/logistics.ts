@@ -1,4 +1,5 @@
 import { Action, SignalAction, SignalActionPayload } from '../action';
+import { CooldownGate } from '../gate';
 import { LLMSubsystem } from './base';
 
 // - Coordinates must be a tuple of integers. If you are given a location, ask Intelligence or Logistics for the coordinates.
@@ -9,6 +10,7 @@ const BASE_PROMPT = `You are the Logistics subordinate function of a super intel
 - When giving the Overlord recommendations, make sure to mention the resource cost
 - If a mission fails, inform the Overlord immediately
 - If you can't do what the Overlord asks, or the request is outside of your specialization, inform them
+- Each base increases resource gather rate
 
 Available Actions:
 {actions}
@@ -35,7 +37,7 @@ class RespondToOverlord extends SignalAction {
     return { message: parameters.message };
   }
 
-  async responseToResult(parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
     return `overlord: ${JSON.stringify(response)}`;
   }
 }
@@ -53,13 +55,13 @@ class ResourceReport extends SignalAction {
   }
 
   async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
-    return `Current Resources: ${JSON.stringify(response.resources)}}`;
+    return `Current Resources: ${JSON.stringify(response)}}`;
   }
 }
 
 class ConstructBase extends Action {
-  name = 'construct-base';
-  description = 'Construct a new base. Each base increases resource gather rate';
+  name = 'construct-level1';
+  description = 'Construct a simple level 1 base, small and low resource gathering, free to build';
   parameters = {
     name: { type: 'string', description: 'Give the base a unique name' },
     location: {
@@ -72,6 +74,8 @@ class ConstructBase extends Action {
       ],
     },
   };
+
+  gates = [new CooldownGate(60 * 60)];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(thoughtActionId: string, _parameters: Record<string, unknown>, data: any) {
@@ -96,8 +100,69 @@ class ConstructBase extends Action {
   }
 }
 
+class ConstructBaseLevel2 extends Action {
+  name = 'construct-level2';
+  description = 'Construct a level 2 base, medium resource gathering, requires 10000 Wood and 10000 Stone to build';
+  parameters = {
+    name: { type: 'string', description: 'Give the base a unique name' },
+    location: {
+      oneOf: [
+        {
+          type: 'string',
+          description: 'Build the base as close as possible to a particular location',
+        },
+        { type: 'null' },
+      ],
+    },
+  };
+
+  gates = [new CooldownGate(60 * 60 * 4)];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async execute(thoughtActionId: string, _parameters: Record<string, unknown>, data: any) {
+    const resourceResult = await this.consumeResources(thoughtActionId, data, { wood: 10_000, stone: 10_000 });
+
+    if (resourceResult.status === 'waiting') {
+      return resourceResult;
+    }
+
+    if (resourceResult.status === 'failed') {
+      return {
+        status: Action.STATUS_COMPLETE,
+        data: { ...data, success: false, reason: 'Not enough resources stored to build base' },
+      };
+    }
+
+    if (!data) {
+      const messageId = await this.sendSignal(thoughtActionId, 'out', 'logistics', { action: 'construct-base' });
+
+      return { status: Action.STATUS_WAITING, data: { messageId } };
+    } else {
+      const { messageId } = data;
+
+      const responsePayload = await this.getSignalResponse(messageId);
+
+      return !responsePayload
+        ? { status: Action.STATUS_WAITING, data }
+        : {
+            status: Action.STATUS_COMPLETE,
+            data: { ...data, success: true, coordinates: responsePayload.coordinates },
+          };
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any) {
+    if (!data.success) {
+      return `Base construction failed: ${data.reason}`;
+    }
+
+    return `Base constructed at coordinates ${JSON.stringify(data.coordinates)}}`;
+  }
+}
+
 export class Logistics extends LLMSubsystem {
   name = 'logistics';
   basePrompt = BASE_PROMPT;
-  actions = [new RespondToOverlord(), new ConstructBase(), new ResourceReport()];
+  actions = [new RespondToOverlord(), new ConstructBase(), new ResourceReport(), new ConstructBaseLevel2()];
 }

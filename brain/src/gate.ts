@@ -48,7 +48,7 @@ export class CooldownGate extends ActionGate {
     }
 
     const lastActionRes =
-      await sql`select created_at from thought_process_actions left join thought_processes on thought_process_actions.thought_process_id = thought_processes.id where world_id = ${worldId} and action = ${this.name} order by created_at desc limit 1`;
+      await sql`select thought_process_actions.created_at from thought_process_actions left join thought_processes on thought_process_actions.thought_process_id = thought_processes.id where world_id = ${worldId} and action = ${this.name} order by thought_process_actions.created_at desc limit 1`;
     const lastAction = lastActionRes[0];
 
     if (!lastAction) {
