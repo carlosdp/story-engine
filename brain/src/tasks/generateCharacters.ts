@@ -19,6 +19,9 @@ const COUNTRIES = [
   'China',
   'Japan',
   'India',
+  'Austria',
+  'Sweden',
+  'United Arab Emirates',
   'Brazil',
   'Australia',
   'Argentina',
@@ -87,17 +90,27 @@ const COUNTRIES = [
   'Portugal',
   'Jordan',
   'Azerbaijan',
-  'Sweden',
-  'United Arab Emirates',
   'Hungary',
   'Belarus',
   'Tajikistan',
-  'Austria',
 ];
+
+function biasedRandomIndex(length: number, bias: number): number {
+  const randomValue = Math.random() ** bias;
+  return Math.floor(randomValue * length);
+}
+
+function getBiasedRandomString(strings: string[], bias = 2): string {
+  if (strings.length === 0) {
+    throw new Error('The input array should not be empty.');
+  }
+  const index = biasedRandomIndex(strings.length, bias);
+  return strings[index];
+}
 
 export default async (job: Job<GenerateCharactersJob>) => {
   for (let i = 0; i < job.data.count; i++) {
-    const randomCountry = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)];
+    const randomCountry = getBiasedRandomString(COUNTRIES, 2);
     const randomGender = Math.random() > 0.5 ? 'Male' : 'Female';
     const response = await message(
       job.data.model ?? 'gpt-3.5-turbo',
