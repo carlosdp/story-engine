@@ -12,7 +12,7 @@ export default async (job: Job<TimeSignalJob>) => {
 
   const worldIds = [];
 
-  if (job.data.worldId) {
+  if (job.data && job.data.worldId) {
     worldIds.push(job.data.worldId);
   } else {
     const worlds = await sql`select id from worlds`;
