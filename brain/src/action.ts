@@ -21,6 +21,8 @@ export abstract class Action {
   static STATUS_FAILED = 'failed' as const;
   static STATUS_WAITING = 'waiting' as const;
 
+  cooldown = 0;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async queue(thoughtProcessId: string, parameters: any) {
     await sql`insert into thought_process_actions ${sql({
@@ -46,11 +48,6 @@ export abstract class Action {
   }
 
   async isAvailable(thoughtProcessId: string): Promise<boolean> {
-    const required = await this.requiredResearch();
-    if (required.length === 0) {
-      return true;
-    }
-
     const thoughtProcessRes = await sql`select world_id from thought_processes where id = ${thoughtProcessId}`;
     const thoughtProcess = thoughtProcessRes[0];
 
@@ -58,15 +55,49 @@ export abstract class Action {
       throw new Error(`Thought process ${thoughtProcessId} not found`);
     }
 
-    const uncompletedResearch = await sql`select * from available_researchables where world_id = ${
-      thoughtProcess.world_id
-    } and active = true and id not in (${sql(required)})`;
+    const checks = await Promise.all([
+      this.hasRequiredResearch(thoughtProcess.world_id),
+      this.isInCooldown(thoughtProcess.world_id),
+    ]);
+
+    return !checks.some(x => !x);
+  }
+
+  async hasRequiredResearch(worldId: string): Promise<boolean> {
+    const required = await this.requiredResearch();
+    if (required.length === 0) {
+      return true;
+    }
+
+    const uncompletedResearch =
+      await sql`select * from available_researchables where world_id = ${worldId} and active = true and id not in (${sql(
+        required
+      )})`;
 
     return uncompletedResearch.length === 0;
   }
 
   async requiredResearch(): Promise<string[]> {
     return [];
+  }
+
+  async isInCooldown(worldId: string) {
+    if (this.cooldown === 0) {
+      return false;
+    }
+
+    const lastActionRes =
+      await sql`select created_at from thought_process_actions left join thought_processes on thought_process_actions.thought_process_id = thought_processes.id where world_id = ${worldId} and action = ${this.name} order by created_at desc limit 1`;
+    const lastAction = lastActionRes[0];
+
+    if (!lastAction) {
+      return false;
+    }
+
+    const lastActionDate = new Date(lastAction.created_at);
+    const now = new Date();
+
+    return now.getTime() - lastActionDate.getTime() < this.cooldown * 1000;
   }
 
   serializeDefinition() {
