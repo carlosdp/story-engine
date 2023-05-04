@@ -8,7 +8,6 @@ export type GenerateCharactersJob = {
 
 export type GenerateLetterJob = {
   worldId: string;
-  prompt: string;
   sender: string;
   recipient: string;
   model?: 'gpt-3.5-turbo' | 'gpt-4';

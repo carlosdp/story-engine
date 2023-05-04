@@ -3,6 +3,7 @@ import logger from './logging';
 import completeResearch from './tasks/completeResearch';
 import generateCharacters from './tasks/generateCharacters';
 import generateLetter from './tasks/generateLetter';
+import generateRandomLetters from './tasks/generateRandomLetters';
 import processActions from './tasks/processActions';
 import processSignals from './tasks/processSignals';
 import sendTimeSignal from './tasks/sendTimeSignal';
@@ -17,6 +18,7 @@ const jobFunctions = {
   processActions: processActions,
   sendTimeSignal: sendTimeSignal,
   generateLetter: generateLetter,
+  generateRandomLetters: generateRandomLetters,
   completeResearch: completeResearch,
 };
 
@@ -50,6 +52,7 @@ boss.schedule('processActions', '* * * * * *');
 boss.schedule('completeResearch', '* * * * * *');
 // every hour
 boss.schedule('sendTimeSignal', '0 0 * * * *');
+boss.schedule('generateRandomLetters', '0 0 * * * *');
 
 boss.on('error', error => logger.error(error));
 

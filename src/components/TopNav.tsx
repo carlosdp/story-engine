@@ -8,7 +8,7 @@ import { useWorlds } from '../hooks/useWorlds';
 const nav = {
   Characters: '/characters',
   'Thought Processes': '/thought_processes',
-  Letters: '/letters',
+  Conversations: '/conversations',
   Observations: '/observations',
 };
 

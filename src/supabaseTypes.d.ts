@@ -96,6 +96,38 @@ export interface Database {
           state?: Database['public']['Enums']['job_state'];
         };
       };
+      character_conversations: {
+        Row: {
+          created_at: string | null;
+          data: Json;
+          id: string;
+          source_character_id: string;
+          target_character_id: string;
+          type: string;
+          updated_at: string | null;
+          world_id: string;
+        };
+        Insert: {
+          created_at?: string | null;
+          data: Json;
+          id?: string;
+          source_character_id: string;
+          target_character_id: string;
+          type: string;
+          updated_at?: string | null;
+          world_id: string;
+        };
+        Update: {
+          created_at?: string | null;
+          data?: Json;
+          id?: string;
+          source_character_id?: string;
+          target_character_id?: string;
+          type?: string;
+          updated_at?: string | null;
+          world_id?: string;
+        };
+      };
       character_relationships: {
         Row: {
           character_id: string;
@@ -235,38 +267,6 @@ export interface Database {
           startafter?: string;
           startedon?: string | null;
           state?: Database['public']['Enums']['job_state'];
-        };
-      };
-      letters: {
-        Row: {
-          content: string;
-          created_at: string;
-          id: string;
-          recipient: string;
-          sender: string;
-          summary: string | null;
-          updated_at: string;
-          world_id: string;
-        };
-        Insert: {
-          content: string;
-          created_at?: string;
-          id?: string;
-          recipient: string;
-          sender: string;
-          summary?: string | null;
-          updated_at?: string;
-          world_id: string;
-        };
-        Update: {
-          content?: string;
-          created_at?: string;
-          id?: string;
-          recipient?: string;
-          sender?: string;
-          summary?: string | null;
-          updated_at?: string;
-          world_id?: string;
         };
       };
       messages: {
@@ -639,6 +639,7 @@ export interface Database {
           name: string | null;
           time_required: unknown | null;
           updated_at: string | null;
+          world_id: string | null;
         };
       };
       completed_researchables: {
@@ -650,6 +651,7 @@ export interface Database {
           name: string | null;
           time_required: unknown | null;
           updated_at: string | null;
+          world_id: string | null;
         };
       };
       queued_messages: {
@@ -665,6 +667,7 @@ export interface Database {
           subsystem: string | null;
           type: Database['public']['Enums']['message_type'] | null;
           updated_at: string | null;
+          world_id: string | null;
         };
         Insert: {
           acknowledged_at?: string | null;
@@ -678,6 +681,7 @@ export interface Database {
           subsystem?: string | null;
           type?: Database['public']['Enums']['message_type'] | null;
           updated_at?: string | null;
+          world_id?: string | null;
         };
         Update: {
           acknowledged_at?: string | null;
@@ -691,6 +695,7 @@ export interface Database {
           subsystem?: string | null;
           type?: Database['public']['Enums']['message_type'] | null;
           updated_at?: string | null;
+          world_id?: string | null;
         };
       };
       staff_users: {

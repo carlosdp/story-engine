@@ -6,42 +6,17 @@ import { DeterministicSubsystem } from './base';
 class AllocateCharacters extends Action {
   name = 'allocate-characters';
   description = 'Allocate characters to Rust';
-  parameters = {
-    typeCounts: {
-      type: 'object',
-    },
-    required: ['typeCounts'],
-  };
+  parameters = {};
 
-  async execute(_thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+  async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
     const typeCounts = parameters.typeCounts as Record<string, number>;
     logger.debug(`Allocating ${JSON.stringify(typeCounts)} characters`);
 
-    const characters = await sql.begin(async tSql => {
-      const results: Record<string, { id: string; name: string }[]> = {};
-      let characterIds: string[] = [];
+    const thoughtProcessRes =
+      await sql`select * from thought_processes inner join thought_process_actions on thought_processes.id = thought_process_actions.thought_process_id where thought_process_actions.id = ${thoughtActionId} limit 1`;
+    const thoughtProcess = thoughtProcessRes[0];
 
-      for (const [type, count] of Object.entries(typeCounts)) {
-        const characterRes =
-          await tSql`select * from characters where rust_npc_type = ${type} and allocated = false and deceased = false limit ${
-            count as number
-          }`;
-        logger.debug(`Chose ${characterRes.length} ${type} characters`);
-
-        results[type] = characterRes.map(character => ({
-          id: character.id,
-          name: `${character.title ? character.title + ' ' : ''}${character.first_name} ${character.last_name}`,
-        }));
-
-        characterIds = [...characterIds, ...characterRes.map(character => character.id)];
-      }
-
-      await tSql`update characters set allocated = true where id = any(${characterIds})`;
-
-      return results;
-    });
-
-    logger.debug(`Allocated ${JSON.stringify(Object.values(characters).length)} characters, sending to Rust`);
+    const characters = await sql`select * from characters where world_id = ${thoughtProcess.world_id}`;
 
     return { status: 'complete', data: characters };
   }

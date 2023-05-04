@@ -8,10 +8,10 @@ import { StaffRoutes } from './components/StaffRoutes';
 import { TopNav } from './components/TopNav';
 import { CharacterDetail } from './screens/CharacterDetail';
 import { CharacterList } from './screens/CharacterList';
+import { ConversationDetail } from './screens/ConversationDetail';
+import { ConversationList } from './screens/ConversationList';
 import { GenerateCharacters } from './screens/GenerateCharacters';
 import { GenerateLetter } from './screens/GenerateLetter';
-import { LetterDetail } from './screens/LetterDetail';
-import { LetterList } from './screens/LetterList';
 import { Login } from './screens/Login';
 import { MockSignals } from './screens/MockSignals';
 import { Observations } from './screens/Observations';
@@ -42,9 +42,9 @@ function App() {
             <Route path="/worlds/:worldId/thought_processes" element={<ThoughtProcesses />} />
             <Route path="/thought_processes/:id" element={<ThoughtProcessDetails />} />
             <Route path="/worlds/:worldId/send-signals" element={<MockSignals />} />
-            <Route path="/worlds/:worldId/letters" element={<LetterList />} />
+            <Route path="/worlds/:worldId/conversations" element={<ConversationList />} />
             <Route path="/worlds/:worldId/generate-letter" element={<GenerateLetter />} />
-            <Route path="/letters/:id" element={<LetterDetail />} />
+            <Route path="/conversations/:id" element={<ConversationDetail />} />
             <Route path="/worlds/:worldId/observations" element={<Observations />} />
           </Route>
         </Route>

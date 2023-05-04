@@ -2,13 +2,13 @@ import { useQuery } from 'react-query';
 
 import { useSupabase } from '../SupabaseProvider';
 
-export const useLetters = (worldId: string) => {
+export const useConversations = (worldId: string) => {
   const { client } = useSupabase();
 
   return useQuery({
-    queryKey: ['letters', worldId],
+    queryKey: ['character_conversations', worldId],
     queryFn: async () => {
-      const { data, error } = await client.from('letters').select('*').eq('world_id', worldId);
+      const { data, error } = await client.from('character_conversations').select('*').eq('world_id', worldId);
       if (error) {
         throw new Error(error.message);
       }
