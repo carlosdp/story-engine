@@ -59,6 +59,23 @@ class ResourceReport extends SignalAction {
   }
 }
 
+class DeployScavenger extends SignalAction {
+  name = 'deploy-scavenger-drone';
+  description = 'Deploy a scavenger drone to gather resources. Must have atleast one base to deploy from';
+  parameters = {};
+  from_subsystem = 'logistics';
+  subsystem = 'logistics';
+  direction = 'out' as const;
+
+  async payload(_parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    return { action: 'deploy-scavenger-drone' };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return response.message;
+  }
+}
+
 class ConstructBase extends Action {
   name = 'construct-level1';
   description = 'Construct a simple level 1 base, small and low resource gathering, free to build';
@@ -164,5 +181,11 @@ class ConstructBaseLevel2 extends Action {
 export class Logistics extends LLMSubsystem {
   name = 'logistics';
   basePrompt = BASE_PROMPT;
-  actions = [new RespondToOverlord(), new ConstructBase(), new ResourceReport(), new ConstructBaseLevel2()];
+  actions = [
+    new RespondToOverlord(),
+    new ConstructBase(),
+    new ResourceReport(),
+    new ConstructBaseLevel2(),
+    new DeployScavenger(),
+  ];
 }

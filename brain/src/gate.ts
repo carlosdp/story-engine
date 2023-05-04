@@ -52,7 +52,7 @@ export class CooldownGate extends ActionGate {
     const lastAction = lastActionRes[0];
 
     if (!lastAction) {
-      return false;
+      return true;
     }
 
     const lastActionDate = new Date(lastAction.created_at);
