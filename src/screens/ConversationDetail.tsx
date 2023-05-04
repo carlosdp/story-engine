@@ -56,8 +56,17 @@ export const ConversationDetail = () => {
         <Flex flexDirection="column" gap="22px">
           <Flex flexDirection="column" gap="12px">
             <Heading size="md">Content</Heading>
-            {/* @ts-ignore */}
-            <Text whiteSpace="pre">{conversation.data.text}</Text>
+            {conversation.type === 'letter' ? (
+              /* @ts-ignore */
+              <Text whiteSpace="pre">{conversation.data.text}</Text>
+            ) : (
+              <Flex flexDirection="column">
+                {/* @ts-ignore */}
+                {conversation.data.dialogue.map((dialogue: any, i: number) => (
+                  <Text key={i}>{dialogue.text}</Text>
+                ))}
+              </Flex>
+            )}
           </Flex>
         </Flex>
       </Flex>

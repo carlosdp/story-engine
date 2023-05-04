@@ -2,7 +2,9 @@ import { boss } from './db';
 import logger from './logging';
 import completeResearch from './tasks/completeResearch';
 import generateCharacters from './tasks/generateCharacters';
+import generateDialogue from './tasks/generateDialogue';
 import generateLetter from './tasks/generateLetter';
+import generateRandomDialogue from './tasks/generateRandomDialogue';
 import generateRandomLetters from './tasks/generateRandomLetters';
 import processActions from './tasks/processActions';
 import processSignals from './tasks/processSignals';
@@ -20,6 +22,8 @@ const jobFunctions = {
   generateLetter: generateLetter,
   generateRandomLetters: generateRandomLetters,
   completeResearch: completeResearch,
+  generateDialogue: generateDialogue,
+  generateRandomDialogue: generateRandomDialogue,
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types
@@ -53,6 +57,7 @@ boss.schedule('completeResearch', '* * * * * *');
 // every hour
 boss.schedule('sendTimeSignal', '0 0 * * * *');
 boss.schedule('generateRandomLetters', '0 0 * * * *');
+boss.schedule('generateRandomDialogue', '0 0 * * * *');
 
 boss.on('error', error => logger.error(error));
 

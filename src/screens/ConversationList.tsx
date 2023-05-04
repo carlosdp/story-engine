@@ -27,6 +27,7 @@ export const ConversationList = () => {
         <Thead>
           <Tr>
             <Th>Name</Th>
+            <Th>Type</Th>
             <Th>Sender</Th>
             <Th>Recipient</Th>
           </Tr>
@@ -36,6 +37,9 @@ export const ConversationList = () => {
             <Tr key={conversation.id}>
               <Td>
                 <Link to={`/conversations/${conversation.id}`}>{conversation.type}</Link>
+              </Td>
+              <Td>
+                <Badge colorScheme="blue">{conversation.type}</Badge>
               </Td>
               <Td>
                 <Badge colorScheme="red">{conversation.source_character_id}</Badge>
