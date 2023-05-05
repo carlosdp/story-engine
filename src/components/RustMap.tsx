@@ -104,6 +104,13 @@ const ImageOverlay = ({ imageUrl, bounds }: { imageUrl: string; bounds: L.LatLng
   return null;
 };
 
+const PlayerMarker = L.icon({
+  iconUrl: '/playerIcon.svg',
+  iconSize: [18, 18],
+  iconAnchor: [12, 12],
+  popupAnchor: [0, 0],
+});
+
 const imageUrl = '/rust-map.png';
 const bounds: L.LatLngBoundsLiteral = [
   [0, 0],
@@ -132,7 +139,7 @@ export const RustMap = ({ observations }: RustMapProps) => {
       {observations
         ?.filter(o => !!o.location)
         .map(observation => (
-          <Marker key={observation.id} position={toMapLocation(observation.location)}>
+          <Marker key={observation.id} position={toMapLocation(observation.location)} icon={PlayerMarker}>
             <Popup>
               <Flex flexDirection="column">
                 <Box>
