@@ -7,7 +7,7 @@ export default async () => {
   logger.debug('Checking for signals');
 
   const signals =
-    await sql`select * from messages where direction = 'in' and acknowledged_at is null and response_to is null`;
+    await sql`select messages.* from messages inner join worlds on messages.world_id = worlds.id where direction = 'in' and acknowledged_at is null and response_to is null and worlds.active = true`;
 
   for (const signal of signals) {
     logger.debug(`Processing signal ${signal.id}`);
