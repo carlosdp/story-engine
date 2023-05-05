@@ -106,7 +106,7 @@ const ImageOverlay = ({ imageUrl, bounds }: { imageUrl: string; bounds: L.LatLng
 
 const PlayerMarker = L.icon({
   iconUrl: '/playerIcon.svg',
-  iconSize: [18, 18],
+  iconSize: [40, 40],
   iconAnchor: [12, 12],
   popupAnchor: [0, 0],
 });
