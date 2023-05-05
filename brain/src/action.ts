@@ -2,6 +2,7 @@ import { validate } from 'jsonschema';
 
 import { sql } from './db';
 import { ActionGate } from './gate';
+import logger from './logging';
 import { embedding } from './utils';
 
 export type Observation = {
@@ -83,6 +84,8 @@ export abstract class Action {
       throw new Error(`Thought process not found for action ${thoughtActionId}`);
     }
 
+    logger.info(typeof payload);
+
     const messageRes = await sql`insert into messages ${sql({
       world_id: thoughtProcess.world_id,
       type: 'command',
@@ -90,7 +93,7 @@ export abstract class Action {
       from_subsystem,
       from_action_id: thoughtActionId,
       subsystem,
-      payload,
+      payload: payload,
     })} returning id`;
     return messageRes[0].id;
   }
