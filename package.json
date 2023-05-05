@@ -7,6 +7,7 @@
     "dev:tunnel": "node runWithTunnel.cjs",
     "dev:vite": "vite",
     "build": "tsc && vite build",
+    "build:brain": "cd brain && tsc",
     "brain": "cd brain && tsc && yarn run:brain",
     "run:brain": "node brain/dist/src/brain.js",
     "preview": "vite preview",
