@@ -5,7 +5,7 @@ import moment from 'moment';
 import { useEffect, useRef } from 'react';
 import { MapContainer, Marker, Popup, useMap } from 'react-leaflet';
 
-const islandSize = 2500;
+const islandSize = 4500;
 const mapHeight = islandSize + 1000;
 const mapWidth = islandSize + 1000;
 
@@ -104,7 +104,7 @@ const ImageOverlay = ({ imageUrl, bounds }: { imageUrl: string; bounds: L.LatLng
   return null;
 };
 
-const imageUrl = '/map_2500_50500.png';
+const imageUrl = '/rust-map.png';
 const bounds: L.LatLngBoundsLiteral = [
   [0, 0],
   [mapHeight, mapWidth],
