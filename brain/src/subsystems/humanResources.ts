@@ -1,28 +1,31 @@
-import { Action, ActionResult } from '../action';
+import { SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
-import logger from '../logging';
 import { DeterministicSubsystem } from './base';
 
-class AllocateCharacters extends Action {
+class AllocateCharacters extends SignalAction {
   name = 'allocate-characters';
   description = 'Allocate characters to Rust';
   parameters = {};
 
-  async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
-    const typeCounts = parameters.typeCounts as Record<string, number>;
-    logger.debug(`Allocating ${JSON.stringify(typeCounts)} characters`);
+  from_subsystem = 'humanResources';
+  subsystem = 'humanResources';
+  direction = 'out' as const;
 
-    const thoughtProcessRes =
-      await sql`select * from thought_processes inner join thought_process_actions on thought_processes.id = thought_process_actions.thought_process_id where thought_process_actions.id = ${thoughtActionId} limit 1`;
-    const thoughtProcess = thoughtProcessRes[0];
+  async payload(_parameters: Record<string, unknown>): Promise<SignalActionPayload> {
+    const characters = await sql`select * from characters`;
 
-    const characters = await sql`select * from characters where world_id = ${thoughtProcess.world_id}`;
-
-    return { status: 'complete', data: characters };
+    return {
+      action: 'allocate-characters',
+      characters: characters.map(ch => ({
+        id: ch.id,
+        npcType: ch.rust_npc_type,
+        name: `${ch.title ? ch.title + ' ' : ''}${ch.first_name} ${ch.last_name}`,
+      })),
+    };
   }
 
-  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
-    return JSON.stringify(data);
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return JSON.stringify(response);
   }
 }
 

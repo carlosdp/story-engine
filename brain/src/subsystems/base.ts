@@ -208,7 +208,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
     })} returning id`;
 
     const thoughtProcessId = thoughtProcessRes[0].id;
-    const actionCommand = message.payload as ActionCommand;
+    const actionCommand = JSON.parse(message.payload) as ActionCommand;
 
     if (!actionCommand.action) {
       logger.debug('No action, returning');
@@ -223,7 +223,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
       return thoughtProcessId;
     }
 
-    await action.queue(thoughtProcessId, actionCommand.parameters);
+    await action.queue(thoughtProcessId, actionCommand);
 
     return thoughtProcessId;
   }
