@@ -15,7 +15,7 @@ export default async (job: Job<TimeSignalJob>) => {
   if (job.data && job.data.worldId) {
     worldIds.push(job.data.worldId);
   } else {
-    const worlds = await sql`select id from worlds`;
+    const worlds = await sql`select id from worlds where active = true`;
     worlds.forEach(world => worldIds.push(world.id));
   }
 

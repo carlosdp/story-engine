@@ -4,7 +4,8 @@ import { sql, boss } from '../db';
 
 export default async (_job: Job) => {
   // select random character relationship
-  const relationships = await sql`select * from character_relationships order by random() limit 20`;
+  const relationships =
+    await sql`select character_relationships.* from character_relationships inner join characters on characters.id = character_relationships.character_id inner join worlds on characters.world_id = worlds.id where worlds.active = true order by random() limit 20`;
 
   // for each relationship, generate a letter
   for (const relationship of relationships) {
