@@ -84,8 +84,6 @@ export abstract class Action {
       throw new Error(`Thought process not found for action ${thoughtActionId}`);
     }
 
-    logger.info(typeof payload);
-
     const messageRes = await sql`insert into messages ${sql({
       world_id: thoughtProcess.world_id,
       type: 'command',
@@ -211,6 +209,7 @@ export abstract class SignalAction extends Action {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
+    logger.info(typeof data);
     if (!data?.messageId) {
       const payload = await this.payload(parameters);
       const messageId = await this.sendSignal(
