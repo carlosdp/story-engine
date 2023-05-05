@@ -1,15 +1,15 @@
 import * as PgBoss from 'pg-boss';
 import * as postgres from 'postgres';
 
-// todo: parameterize
+const DB_URL = process.env.DB_URL ?? 'postgres://postgres:postgres@localhost:54322/postgres';
+
 // @ts-ignore
 export const boss = new PgBoss({
-  connectionString: 'postgres://postgres:postgres@localhost:54322/postgres',
+  connectionString: DB_URL,
   schema: 'public',
-  cronMonitorIntervalSeconds: 10,
 });
 
-export const sql = postgres('postgres://postgres:postgres@localhost:54322/postgres', {
+export const sql = postgres(DB_URL, {
   types: {
     point: {
       to: 600,
