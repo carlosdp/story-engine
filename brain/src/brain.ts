@@ -62,3 +62,15 @@ boss.schedule('generateRandomDialogue', '0 0 * * * *');
 boss.on('error', error => logger.error(error));
 
 logger.info('Brain running!');
+
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received, stopping...');
+  await boss.stop();
+  process.exit();
+});
+
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, stopping...');
+  await boss.stop();
+  process.exit();
+});
