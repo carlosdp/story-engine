@@ -11,7 +11,7 @@ const BASE_PROMPT = `You are the Mission Commander subordinate function of a sup
 - Paths cannot be longer in length (the sum of distances between coordinates) than the max path distance of that asset
 - Coordinates are expressed as [x, z], they are sometimes expressed as [x, elevation, z], but elevation is ignored
 
-Island Size: 2500 units, coordinate [0,0] is at the center
+Island Size: 4500 units, coordinate [0,0] is at the center
 
 Available Actions:
 {actions}

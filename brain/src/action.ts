@@ -2,7 +2,6 @@ import { validate } from 'jsonschema';
 
 import { sql } from './db';
 import { ActionGate } from './gate';
-import logger from './logging';
 import { embedding } from './utils';
 
 export type Observation = {
