@@ -1,6 +1,8 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 
+import logger from './logging';
+
 export const message = async (
   model: string,
   messages: { role: string; content: string }[],
