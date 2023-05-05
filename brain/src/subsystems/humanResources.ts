@@ -12,7 +12,7 @@ class AllocateCharacters extends SignalAction {
   direction = 'out' as const;
 
   async payload(_parameters: Record<string, unknown>): Promise<SignalActionPayload> {
-    const characters = await sql`select * from characters`;
+    const characters = await sql`select * from characters order by random()`;
 
     return {
       action: 'allocate-characters',
