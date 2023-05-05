@@ -10,6 +10,8 @@ export const boss = new PgBoss({
 });
 
 export const sql = postgres(DB_URL, {
+  // needed in prod due to an issue with jsonb https://github.com/porsager/postgres/issues/379
+  prepare: false,
   types: {
     point: {
       to: 600,
