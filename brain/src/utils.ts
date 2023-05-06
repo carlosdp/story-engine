@@ -53,7 +53,10 @@ export const rawMessage = async (
   axiosRetry(client, {
     retries: 5,
     retryDelay: axiosRetry.exponentialDelay,
-    retryCondition: error => axiosRetry.isNetworkOrIdempotentRequestError(error) || error.response?.status === 429,
+    retryCondition: error =>
+      axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+      error.response?.status === 429 ||
+      error.response?.status === 502,
   });
 
   try {
