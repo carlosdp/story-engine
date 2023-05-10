@@ -53,11 +53,11 @@ for (const [jobName, jobFunction] of Object.entries(jobFunctions)) {
 
 boss.schedule('processSignals', '* * * * * *');
 boss.schedule('processActions', '* * * * * *');
-boss.schedule('completeResearch', '* * * * * *');
+// boss.schedule('completeResearch', '* * * * * *');
 // every hour
-boss.schedule('sendTimeSignal', '0 0 * * * *');
-boss.schedule('generateRandomLetters', '0 0 * * * *');
-boss.schedule('generateRandomDialogue', '0 0 * * * *');
+// boss.schedule('sendTimeSignal', '0 0 * * * *');
+// boss.schedule('generateRandomLetters', '0 0 * * * *');
+// boss.schedule('generateRandomDialogue', '0 0 * * * *');
 
 boss.on('error', error => logger.error(error));
 

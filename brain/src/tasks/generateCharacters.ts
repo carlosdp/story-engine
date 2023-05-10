@@ -3,7 +3,7 @@ import type { Job } from 'pg-boss';
 import { sql } from '../db';
 import type { GenerateCharactersJob } from '../jobs';
 import logger from '../logging';
-import { message } from '../utils';
+import { embedding, message } from '../utils';
 
 const AVG_NUMBER_OF_RELATIONSHIPS = 3;
 const COUNTRIES = [
@@ -119,18 +119,17 @@ export default async (job: Job<GenerateCharactersJob>) => {
           role: 'system',
           content: `You are an expert character designer for a video game.
 
-      Game Description: A survival game where hundreds of players play against an AI overlord that commands an army of bandits, army scientists, and drones on an island.
+      Game Description: A small town in Europe called Castor Town, that looks quaint and traditional, but is actually a hotspot for people working on the beginnings of a new space race.
 
       Character Origin: ${randomCountry}
       Character Gender: ${randomGender}
       
       When the user gives you the type of character they need, respond with a character definition with these JSON fields:
-      title: Mr or Mrs or Dr, etc. can also be null
-      first_name: the character's first name
-      last_name: their last name
+      name: the character's name
+      short_description: a 2-3 sentence description of the character, concentrating on their profession and any major affiliations
       backstory: a backstory for the character, how did they come into this position? did they go to school somewhere? what are they proud of? do they have a family? what are their hobbies and interests?
       personality: are they abrasive? comical? serious? shy? etc.
-      writing_style: complete sentences? very casual? shortened sentences? mis-spellings?
+      writing_style: complete sentences? very casual? shortened sentences? mis-spellings? uses slang? etc.
       
       Be creative with the characters. Sometimes humans come from very different backgrounds than their job description entails.`,
         },
@@ -142,12 +141,18 @@ export default async (job: Job<GenerateCharactersJob>) => {
     );
 
     const character = JSON.parse(response);
+
+    const embed = await embedding(`${character.short_description} ${character.backstory}`);
+
     await sql`
-      INSERT INTO characters (world_id, title, first_name, last_name, backstory, personality, writing_style, rust_npc_type)
-      VALUES (${job.data.worldId}, ${character.title}, ${character.first_name}, ${character.last_name}, ${character.backstory}, ${character.personality}, ${character.writing_style}, ${job.data.rustNpcType})
+      insert into characters (world_id, name, description, backstory, personality, writing_style, embedding)
+      values (${job.data.worldId}, ${character.name}, ${character.short_description}, ${character.backstory}, ${
+      character.personality
+    }, ${character.writing_style}, ${JSON.stringify(embed)})
     `;
   }
 
+  /*
   logger.info(`Calculating target number of relationships, k=${AVG_NUMBER_OF_RELATIONSHIPS}...`);
 
   const currentNumberOfCharactersRes = await sql`
@@ -258,4 +263,5 @@ export default async (job: Job<GenerateCharactersJob>) => {
 
     logger.info('Done');
   }
+  */
 };

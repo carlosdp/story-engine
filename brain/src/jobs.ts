@@ -1,7 +1,6 @@
 export type GenerateCharactersJob = {
   worldId: string;
   prompt: string;
-  rustNpcType: string;
   count: number;
   model?: 'gpt-3.5-turbo' | 'gpt-4';
 };

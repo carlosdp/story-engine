@@ -20,7 +20,7 @@ export default async (job: Job<TimeSignalJob>) => {
   }
 
   for (const worldId of worldIds) {
-    await sql`insert into messages ${sql({
+    await sql`insert into signals ${sql({
       world_id: worldId,
       type: 'signal',
       direction: 'in',

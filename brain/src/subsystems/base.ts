@@ -21,7 +21,7 @@ export abstract class LLMSubsystem implements Subsystem {
   abstract basePrompt: string;
   abstract actions: Action[];
 
-  model: 'gpt-3.5-turbo' | 'gpt-4' = 'gpt-4';
+  model: 'gpt-3.5-turbo' | 'gpt-4' = 'gpt-3.5-turbo';
   temperature = 0.4;
 
   private cachedAvailableActions: Record<string, Action> | null = null;
@@ -112,6 +112,18 @@ export abstract class LLMSubsystem implements Subsystem {
       logger.debug(response.content);
 
       const actionCommand = JSON.parse(response.content) as ActionCommand;
+
+      if (!actionCommand.thought) {
+        logger.debug('No thought, invalid response');
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: 'No thought detected. Follow instructions and try again.',
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
 
       if (!actionCommand.action || actionCommand.action === 'null') {
         logger.debug('No action, returning');
@@ -232,7 +244,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
     const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
     const thoughtProcess = thoughtProcessRes[0];
 
-    const initiatingSignalRes = await sql`select * from messages where id = ${thoughtProcess.initiating_message_id}`;
+    const initiatingSignalRes = await sql`select * from signals where id = ${thoughtProcess.initiating_message_id}`;
     const initiatingSignal = initiatingSignalRes[0];
 
     const actionRes = await sql`select * from thought_process_actions where id = ${completedActionId}`;
@@ -240,7 +252,7 @@ export abstract class DeterministicSubsystem implements Subsystem {
 
     const result = completedAction.result;
 
-    await sql`insert into messages ${sql({
+    await sql`insert into signals ${sql({
       world_id: thoughtProcess.world_id,
       type: 'signal',
       response_to: initiatingSignal.id,

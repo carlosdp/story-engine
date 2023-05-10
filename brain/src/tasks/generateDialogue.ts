@@ -73,7 +73,7 @@ export default async (job: Job<GenerateLetterJob>) => {
     },
   })} returning id`;
 
-  await sql`insert into messages ${sql({
+  await sql`insert into signals ${sql({
     world_id: job.data.worldId,
     subsystem: 'humanResources',
     direction: 'out',

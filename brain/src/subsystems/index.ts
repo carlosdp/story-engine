@@ -1,17 +1,9 @@
-import { HumanResources } from './humanResources';
-import { Intelligence } from './intelligence';
-import { Logistics } from './logistics';
-import { Military } from './military';
-import { MissionCommander } from './missionCommander';
-import { Overlord } from './overlord';
+import { MissionBuilder } from './missionBuilder';
+import { Storyteller } from './storyteller';
 
 const subsystems = {
-  overlord: new Overlord(),
-  military: new Military(),
-  logistics: new Logistics(),
-  humanResources: new HumanResources(),
-  intelligence: new Intelligence(),
-  missionCommander: new MissionCommander(),
+  storyteller: new Storyteller(),
+  missionBuilder: new MissionBuilder(),
 };
 
 export default subsystems;

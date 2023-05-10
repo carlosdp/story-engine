@@ -10,7 +10,6 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
-  Select,
   Textarea,
   useToast,
 } from '@chakra-ui/react';
@@ -23,7 +22,6 @@ import { useCreateJob } from '../hooks/useCreateJob';
 
 type CharacterJob = {
   count: number;
-  rustNpcType: string;
   prompt: string;
 };
 
@@ -45,7 +43,6 @@ export const GenerateCharacters = () => {
         data: {
           worldId: worldId!,
           count: data.count,
-          rustNpcType: data.rustNpcType,
           prompt: data.prompt,
         },
       });
@@ -76,16 +73,6 @@ export const GenerateCharacters = () => {
               </NumberInputStepper>
             </NumberInput>
             {formState.errors.count && <FormErrorMessage>{formState.errors.count.message}</FormErrorMessage>}
-          </FormControl>
-          <FormControl isInvalid={!!formState.errors.rustNpcType} isRequired={true}>
-            <FormLabel>Rust NPC Type</FormLabel>
-            <Select placeholder="Select a role" {...register('rustNpcType', { required: true })}>
-              <option value="scientist">Scientist</option>
-              <option value="bandit">Bandit</option>
-            </Select>
-            {formState.errors.rustNpcType && (
-              <FormErrorMessage>{formState.errors.rustNpcType.message}</FormErrorMessage>
-            )}
           </FormControl>
           <FormControl isInvalid={!!formState.errors.prompt} isRequired={true}>
             <FormLabel>Prompt</FormLabel>

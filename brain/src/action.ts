@@ -83,7 +83,7 @@ export abstract class Action {
       throw new Error(`Thought process not found for action ${thoughtActionId}`);
     }
 
-    const messageRes = await sql`insert into messages ${sql({
+    const messageRes = await sql`insert into signals ${sql({
       world_id: thoughtProcess.world_id,
       type: 'command',
       direction,
@@ -96,7 +96,7 @@ export abstract class Action {
   }
 
   protected async getSignalResponse(messageId: string) {
-    const signalRes = await sql`select * from messages where id = ${messageId}`;
+    const signalRes = await sql`select * from signals where id = ${messageId}`;
     const signal = signalRes[0];
 
     if (!signal) {
@@ -105,7 +105,7 @@ export abstract class Action {
 
     if (signal.response_to && signal.direction === 'in') {
       // check if target thought process is terminated
-      const responseToSignalRes = await sql`select * from messages where id = ${signal.response_to}`;
+      const responseToSignalRes = await sql`select * from signals where id = ${signal.response_to}`;
       const responseToSignal = responseToSignalRes[0];
 
       if (!responseToSignal) {
@@ -126,14 +126,14 @@ export abstract class Action {
     }
 
     const messageRes =
-      await sql`select * from messages where direction = 'in' and response_to = ${messageId} and acknowledged_at is null`;
+      await sql`select * from signals where direction = 'in' and response_to = ${messageId} and acknowledged_at is null`;
     const message = messageRes[0];
 
     if (!message) {
       return null;
     }
 
-    await sql`update messages set acknowledged_at = now() where id = ${message.id}`;
+    await sql`update signals set acknowledged_at = now() where id = ${message.id}`;
 
     return message.payload;
   }

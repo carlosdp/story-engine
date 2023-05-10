@@ -7,7 +7,7 @@ export default async () => {
   logger.debug('Checking for signals');
 
   const signals =
-    await sql`select messages.* from messages inner join worlds on messages.world_id = worlds.id where direction = 'in' and acknowledged_at is null and response_to is null and worlds.active = true`;
+    await sql`select signals.* from signals inner join worlds on signals.world_id = worlds.id where direction = 'in' and acknowledged_at is null and response_to is null and worlds.active = true`;
 
   for (const signal of signals) {
     logger.debug(`Processing signal ${signal.id}`);
@@ -36,21 +36,21 @@ export default async () => {
         if (existingChild) {
           // check if child has an active, non-responded-to message to origin subsystem
           const existingChildMessageRes = await sql`
-            select messages.* from messages
-            left join thought_process_actions on messages.from_action_id = thought_process_actions.id
+            select signals.* from signals
+            left join thought_process_actions on signals.from_action_id = thought_process_actions.id
             where thought_process_actions.thought_process_id = ${existingChild.id}
-            and messages.direction = 'in'
-            and messages.from_subsystem = ${signal.subsystem}
-            and messages.subsystem = ${signal.from_subsystem}
-            and messages.id not in (
-              select response_to from messages where response_to is not null
+            and signals.direction = 'in'
+            and signals.from_subsystem = ${signal.subsystem}
+            and signals.subsystem = ${signal.from_subsystem}
+            and signals.id not in (
+              select response_to from signals where response_to is not null
             )
           `;
           const existingChildMessage = existingChildMessageRes[0];
 
           if (existingChildMessage) {
             // set response_to to existing child message
-            await sql`update messages set response_to = ${existingChildMessage.id} where id = ${signal.id}`;
+            await sql`update signals set response_to = ${existingChildMessage.id} where id = ${signal.id}`;
             continue;
           }
         }
@@ -58,21 +58,21 @@ export default async () => {
         // this is a child
         // check if parent has an active, non-reponded-to message to origin subsystem
         const parentMessageRes = await sql`
-          select messages.* from messages
-          left join thought_process_actions on messages.from_action_id = thought_process_actions.id
+          select signals.* from signals
+          left join thought_process_actions on signals.from_action_id = thought_process_actions.id
           where thought_process_actions.thought_process_id = ${parentThoughtProcessId}
-          and messages.direction = 'in'
-          and messages.from_subsystem = ${signal.subsystem}
-          and messages.subsystem = ${signal.from_subsystem}
-          and messages.id not in (
-            select response_to from messages where response_to is not null
+          and signals.direction = 'in'
+          and signals.from_subsystem = ${signal.subsystem}
+          and signals.subsystem = ${signal.from_subsystem}
+          and signals.id not in (
+            select response_to from signals where response_to is not null
           )
         `;
         const parentMessage = parentMessageRes[0];
 
         if (parentMessage) {
           // set response_to to existing parent message
-          await sql`update messages set response_to = ${parentMessage.id} where id = ${signal.id}`;
+          await sql`update signals set response_to = ${parentMessage.id} where id = ${signal.id}`;
           continue;
         }
       }
@@ -82,7 +82,7 @@ export default async () => {
 
     try {
       const thoughtProcessId = await subsystem.processSignal(signal as SubsystemMessage);
-      await sql`update messages set acknowledged_at = now() where id = ${signal.id}`;
+      await sql`update signals set acknowledged_at = now() where id = ${signal.id}`;
 
       logger.info(`Processed signal ${signal.id} with thought process ${thoughtProcessId}`);
     } catch (error) {
