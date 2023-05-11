@@ -8,10 +8,11 @@
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
-		3000
+		3000,
+		54323
 	],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "yarn install && npm install -g supabase",
+	"updateContentCommand": "yarn install",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
