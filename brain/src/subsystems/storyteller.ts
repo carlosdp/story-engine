@@ -1,5 +1,6 @@
 import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
+import logger from '../logging';
 import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
 
@@ -8,8 +9,10 @@ const BASE_PROMPT = `You are a superintelligent story designer for a perisistent
 - Dependencies such as characters must be created (or found via search) before they can be used in the story
 - It's important to always search to for an existing character that meets the story's needs before attempting to creating a new one
 - All characters included in the story must be explicitly created or identified before the story can be written
-- If you want to use a character you found in a search, you must add it to the story before using it
-- Stories should be simple and only within the scope requested. Think about why a character is critical to the story before searching/creating them
+- If you want to use a character you must add it to the story before using it
+- If you use an existing character from search, make sure the character actually matches your need. An apprentice marksman is not a skilled marksman, for example.
+- Every character mentioned in the prompt must exist in the story
+- You cannot re-use an already allocated character
 - Once you have the dependencies you need, write the story
 
 You have access to a variety of actions to query and inspect the game state and world, as well as actions to create dependencies such as characters and write the final story:
@@ -68,7 +71,7 @@ class SearchForCharacter extends Action {
   }
 
   async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
-    return JSON.stringify(data);
+    return `Search Results: ${JSON.stringify(data)}`;
   }
 }
 
@@ -79,7 +82,22 @@ class AddCharacterToStory extends Action {
     id: { type: 'string', description: 'the character id' },
   };
 
-  async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+  async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    const thoughtProcessRes =
+      await sql`select thought_process_id from thought_process_actions where id = ${thoughtActionId}`;
+    const thoughtProcessId = thoughtProcessRes[0].thought_process_id;
+    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
+    if (storylines.length === 0) {
+      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
+      return { status: 'failed' };
+    }
+
+    const storylineId = storylines[0].id;
+    await sql`insert into storyline_characters ${sql({
+      storyline_id: storylineId,
+      character_id: parameters.id as string,
+    })}`;
+
     return { status: 'complete', data: 'Character added' };
   }
 
@@ -95,7 +113,23 @@ class WriteStory extends Action {
     text: { type: 'string', description: 'the text of the story, can span multiple paragraphs' },
   };
 
-  async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+  async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    const thoughtProcessRes =
+      await sql`select thought_process_id from thought_process_actions where id = ${thoughtActionId}`;
+    const thoughtProcessId = thoughtProcessRes[0].thought_process_id;
+    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
+    if (storylines.length === 0) {
+      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
+      return { status: 'failed' };
+    }
+
+    const storylineId = storylines[0].id;
+
+    await sql`insert into storyline_stories ${sql({
+      storyline_id: storylineId,
+      text: parameters.text as string,
+    })}`;
+
     return { status: 'complete', data: 'Story written succesfully' };
   }
 
@@ -110,4 +144,5 @@ export class Storyteller extends LLMSubsystem {
   actions = [new CreateCharacter(), new SearchForCharacter(), new AddCharacterToStory(), new WriteStory()];
   basePrompt = BASE_PROMPT;
   model = 'gpt-4' as const;
+  temperature = 0.1;
 }

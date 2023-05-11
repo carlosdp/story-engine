@@ -1,4 +1,4 @@
-import { Action } from '../action';
+import { Action, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import logger from '../logging';
 import { SubsystemMessage } from '../signal';
@@ -10,11 +10,158 @@ export type ActionCommand = {
   parameters: Record<string, unknown>;
 };
 
-export type Subsystem = {
-  processSignal(message: SubsystemMessage): Promise<string>;
-  continueProcessing(thoughtProcessId: string, completedActionId: string): Promise<string>;
-  getAction(name: string): Action | undefined;
-};
+export abstract class Subsystem {
+  abstract processSignal(message: SubsystemMessage): Promise<string>;
+  abstract continueProcessing(thoughtProcessId: string, completedActionId: string): Promise<string>;
+  abstract getAction(name: string): Action | undefined;
+
+  static async processSignals(subsystems: Record<string, Subsystem>, signals: any[]): Promise<string[]> {
+    const thoughtProcessIds: string[] = [];
+
+    for (const signal of signals) {
+      logger.debug(`Processing signal ${signal.id}`);
+
+      if (!Object.keys(subsystems).includes(signal.subsystem)) {
+        throw new Error(`Invalid subsystem: ${signal.subsystem}`);
+      }
+
+      if (signal.from_action_id) {
+        const actionRes = await sql`select * from thought_process_actions where id = ${signal.from_action_id}`;
+        const action = actionRes[0];
+        const parentThoughtProcessRes =
+          await sql`select parent_thought_process_id from thought_processes where id = ${action.thought_process_id}`;
+        const parentThoughtProcessId = parentThoughtProcessRes[0].parent_thought_process_id;
+
+        if (!parentThoughtProcessId) {
+          // this is a parent
+          // check if existing child thought process for subsystem
+          const existingChildRes = await sql`
+            select id from thought_processes
+            where parent_thought_process_id = ${action.thought_process_id}
+            and subsystem = ${signal.subsystem}
+          `;
+          const existingChild = existingChildRes[0];
+
+          if (existingChild) {
+            // check if child has an active, non-responded-to message to origin subsystem
+            const existingChildMessageRes = await sql`
+              select signals.* from signals
+              left join thought_process_actions on signals.from_action_id = thought_process_actions.id
+              left join thought_processes on thought_process_actions.thought_process_id = thought_processes.id
+              where thought_process_actions.thought_process_id = ${existingChild.id}
+              and thought_processes.terminated_at is null
+              and signals.direction = 'in'
+              and signals.from_subsystem = ${signal.subsystem}
+              and signals.subsystem = ${signal.from_subsystem}
+              and signals.id not in (
+                select response_to from signals where response_to is not null
+              )
+            `;
+            const existingChildMessage = existingChildMessageRes[0];
+
+            if (existingChildMessage) {
+              // set response_to to existing child message
+              await sql`update signals set response_to = ${existingChildMessage.id} where id = ${signal.id}`;
+              continue;
+            }
+          }
+        } else {
+          // this is a child
+          // check if parent has an active, non-reponded-to message to origin subsystem
+          const parentMessageRes = await sql`
+            select signals.* from signals
+            left join thought_process_actions on signals.from_action_id = thought_process_actions.id
+            where thought_process_actions.thought_process_id = ${parentThoughtProcessId}
+            and signals.direction = 'in'
+            and signals.from_subsystem = ${signal.subsystem}
+            and signals.subsystem = ${signal.from_subsystem}
+            and signals.id not in (
+              select response_to from signals where response_to is not null
+            )
+          `;
+          const parentMessage = parentMessageRes[0];
+
+          if (parentMessage) {
+            // set response_to to existing parent message
+            await sql`update signals set response_to = ${parentMessage.id} where id = ${signal.id}`;
+            continue;
+          }
+        }
+      }
+
+      const subsystem = subsystems[signal.subsystem as keyof typeof subsystems];
+
+      try {
+        const thoughtProcessId = await subsystem.processSignal(signal as SubsystemMessage);
+        await this.acknowledgeSignal(signal.id);
+
+        thoughtProcessIds.push(thoughtProcessId);
+
+        logger.debug(`Processed signal ${signal.id} with thought process ${thoughtProcessId}`);
+      } catch (error) {
+        const exception = error as Error;
+        logger.error(`Error processing signal ${signal.id}: ${exception.message}\n${exception.stack}`);
+      }
+    }
+
+    return thoughtProcessIds;
+  }
+
+  static async processActions(subsystems: Record<string, Subsystem>, actions: any[]) {
+    for (const processAction of actions) {
+      logger.debug(`Processing thought process action ${processAction.id}`);
+
+      const thoughtProcessRes =
+        await sql`select * from thought_processes where id = ${processAction.thought_process_id}`;
+      const thoughtProcess = thoughtProcessRes[0];
+
+      if (!Object.keys(subsystems).includes(thoughtProcess.subsystem)) {
+        throw new Error(`Invalid subsystem: ${thoughtProcess.subsystem}`);
+      }
+
+      const subsystem = subsystems[thoughtProcess.subsystem as keyof typeof subsystems];
+
+      const action = subsystem.getAction(processAction.action);
+
+      if (!action) {
+        logger.error(`Invalid action: ${processAction.action}`);
+        await sql`update thought_process_actions set status = 'failed' where id = ${processAction.id}`;
+        continue;
+      }
+
+      const actionResult = await action.execute(processAction.id, processAction.parameters, processAction.data);
+
+      if (actionResult.status === 'failed') {
+        logger.error(`Action failed: ${processAction.action}`);
+        await sql`update thought_process_actions set status = 'failed' where id = ${processAction.id}`;
+        continue;
+      }
+
+      await sql`update thought_process_actions set status = ${actionResult.status}, data = ${actionResult.data} where id = ${processAction.id}`;
+
+      if (actionResult.status === 'complete') {
+        logger.debug(`Action result: ${JSON.stringify(actionResult)} ${actionResult.status}`);
+        const result = await action.result(
+          processAction.thought_process_id,
+          processAction.parameters,
+          actionResult.data
+        );
+        await sql`update thought_process_actions set result = ${result} where id = ${processAction.id}`;
+
+        try {
+          await subsystem.continueProcessing(processAction.thought_process_id, processAction.id);
+        } catch (error) {
+          const exception = error as Error;
+          logger.error(`Failed to continue processing: ${exception.message}\n${exception.stack}`);
+        }
+      }
+    }
+  }
+
+  static async acknowledgeSignal(signalId: string) {
+    await sql`update signals set acknowledged_at = now() where id = ${signalId}`;
+  }
+}
 
 export abstract class LLMSubsystem implements Subsystem {
   abstract name: string;
@@ -48,7 +195,29 @@ export abstract class LLMSubsystem implements Subsystem {
     return this.cachedAvailableActions;
   }
 
-  async processSignal(message: SubsystemMessage) {
+  async createSignal(worldId: string, payload: SignalActionPayload): Promise<SubsystemMessage> {
+    const signals = await sql`insert into signals ${sql({
+      world_id: worldId,
+      direction: 'in',
+      subsystem: this.name,
+      payload,
+    })} returning *`;
+
+    return signals[0] as SubsystemMessage;
+  }
+
+  async createThoughtProcess(message: SubsystemMessage, parentThoughtProcessId: string | null = null): Promise<string> {
+    const thoughtProcessRes = await sql`insert into thought_processes ${sql({
+      world_id: message.world_id,
+      initiating_message_id: message.id,
+      parent_thought_process_id: parentThoughtProcessId,
+      subsystem: this.name,
+    })} returning id`;
+
+    return thoughtProcessRes[0].id;
+  }
+
+  async processSignal(message: SubsystemMessage): Promise<string> {
     const messages = [
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
     ];
@@ -61,13 +230,21 @@ export abstract class LLMSubsystem implements Subsystem {
       parentThoughtProcessId = action.thought_process_id;
     }
 
-    const thoughtProcessRes = await sql`insert into thought_processes ${sql({
-      world_id: message.world_id,
-      initiating_message_id: message.id,
-      parent_thought_process_id: parentThoughtProcessId,
-      subsystem: this.name,
-    })} returning id`;
-    const thoughtProcessId = thoughtProcessRes[0].id;
+    const thoughtProcessId = await this.createThoughtProcess(message, parentThoughtProcessId);
+
+    const response = await this.processMessages(thoughtProcessId, messages);
+
+    messages.push(response);
+
+    await this.saveMessages(thoughtProcessId, messages);
+
+    return thoughtProcessId;
+  }
+
+  async processSignalWithExistingThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<string> {
+    const messages = [
+      { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
+    ];
 
     const response = await this.processMessages(thoughtProcessId, messages);
 

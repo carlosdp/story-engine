@@ -15,3 +15,9 @@ export type GenerateLetterJob = {
 export type TimeSignalJob = {
   worldId: string;
 };
+
+export type StartCharacterJob = {
+  worldId: string;
+  playerCharacterId: string;
+  prompt: string;
+};

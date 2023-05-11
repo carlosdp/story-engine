@@ -9,6 +9,7 @@ import generateRandomLetters from './tasks/generateRandomLetters';
 import processActions from './tasks/processActions';
 import processSignals from './tasks/processSignals';
 import sendTimeSignal from './tasks/sendTimeSignal';
+import startCharacter from './tasks/startCharacter';
 
 logger.info('Brain booting up...');
 
@@ -24,6 +25,7 @@ const jobFunctions = {
   completeResearch: completeResearch,
   generateDialogue: generateDialogue,
   generateRandomDialogue: generateRandomDialogue,
+  startCharacter: startCharacter,
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types

@@ -9,6 +9,7 @@ const BASE_PROMPT = `You are superintelligent character designer for a perisiste
 
 - Start by generating a gender and origin for the character
 - Once you have the necessary information, create the character
+- Characters should have first and last names, unless it's an explicit choice to have a single word name
 
 World Description: A small town in Europe called Castor Town, that looks quaint and traditional, but is actually a hotspot for people working on the beginnings of a new space race.
 

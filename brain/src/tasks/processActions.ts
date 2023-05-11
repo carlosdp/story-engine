@@ -3,6 +3,7 @@ import { Job } from 'pg-boss';
 import { boss, sql } from '../db';
 import logger from '../logging';
 import subsystems from '../subsystems';
+import { Subsystem } from '../subsystems/base';
 
 export default async (job: Job) => {
   logger.debug(`Checking for actions, ${job.id}`);
@@ -10,51 +11,7 @@ export default async (job: Job) => {
   const processActions =
     await sql`select * from thought_process_actions where status = 'waiting' or status = 'pending'`;
 
-  for (const processAction of processActions) {
-    logger.debug(`Processing thought process action ${processAction.id}`);
-
-    const thoughtProcessRes = await sql`select * from thought_processes where id = ${processAction.thought_process_id}`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    if (!Object.keys(subsystems).includes(thoughtProcess.subsystem)) {
-      throw new Error(`Invalid subsystem: ${thoughtProcess.subsystem}`);
-    }
-
-    const subsystem = subsystems[thoughtProcess.subsystem as keyof typeof subsystems];
-
-    const action = subsystem.getAction(processAction.action);
-
-    if (!action) {
-      logger.error(`Invalid action: ${processAction.action}`);
-      await sql`update thought_process_actions set status = 'failed' where id = ${processAction.id}`;
-      continue;
-    }
-
-    const actionResult = await action.execute(processAction.id, processAction.parameters, processAction.data);
-
-    if (actionResult.status === 'failed') {
-      logger.error(`Action failed: ${processAction.action}`);
-      await sql`update thought_process_actions set status = 'failed' where id = ${processAction.id}`;
-      continue;
-    }
-
-    await sql`update thought_process_actions set status = ${actionResult.status}, data = ${actionResult.data} where id = ${processAction.id}`;
-
-    if (actionResult.status === 'complete') {
-      logger.debug(`Action result: ${JSON.stringify(actionResult)} ${actionResult.status}`);
-      const result = await action.result(processAction.thought_process_id, processAction.parameters, actionResult.data);
-      await sql`update thought_process_actions set result = ${result} where id = ${processAction.id}`;
-
-      try {
-        await subsystem.continueProcessing(processAction.thought_process_id, processAction.id);
-      } catch (error) {
-        const exception = error as Error;
-        logger.error(`Failed to continue processing: ${exception.message}\n${exception.stack}`);
-      }
-    }
-
-    logger.debug(`Processed action ${processAction.id}`);
-  }
+  await Subsystem.processActions(subsystems, processActions);
 
   if (processActions.length > 0) {
     await boss.send('processSignals', {}, { singletonKey: 'processSignals' });
