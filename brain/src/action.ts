@@ -242,3 +242,39 @@ export abstract class SignalAction extends Action {
     return this.responseToResult(parameters, data.responsePayload);
   }
 }
+
+export abstract class ReturnAction extends SignalAction {
+  subsystem = '';
+  direction = 'in' as const;
+
+  async responseToResult(_parameters: Record<string, unknown>, _response: any): Promise<string> {
+    throw new Error('responseToResult should never be called for a ReturnAction');
+  }
+
+  async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
+    const thoughtProcessRes =
+      await sql`select thought_processes.id, initiating_message_id, subsystem from thought_processes inner join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId} limit 1`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess) {
+      throw new Error(`Thought process not found for action ${thoughtActionId}`);
+    }
+
+    const initiatingMessageRes =
+      await sql`select from_subsystem from signals where id = ${thoughtProcess.initiating_message_id} limit 1`;
+    const initiatingMessage = initiatingMessageRes[0];
+
+    if (!initiatingMessage) {
+      throw new Error(`Initiating message not found for action ${thoughtActionId}`);
+    }
+
+    this.from_subsystem = thoughtProcess.subsystem;
+    this.subsystem = initiatingMessage.from_subsystem;
+
+    const result = super.execute(thoughtActionId, parameters, data);
+
+    await sql`update thought_processes set terminated_at = now() where id = ${thoughtProcess.id}`;
+
+    return result;
+  }
+}

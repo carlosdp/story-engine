@@ -38,7 +38,9 @@ export default async () => {
           const existingChildMessageRes = await sql`
             select signals.* from signals
             left join thought_process_actions on signals.from_action_id = thought_process_actions.id
+            left join thought_processes on thought_process_actions.thought_process_id = thought_processes.id
             where thought_process_actions.thought_process_id = ${existingChild.id}
+            and thought_processes.terminated_at is null
             and signals.direction = 'in'
             and signals.from_subsystem = ${signal.subsystem}
             and signals.subsystem = ${signal.from_subsystem}

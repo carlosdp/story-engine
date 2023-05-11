@@ -1,4 +1,4 @@
-import { SignalAction, SignalActionPayload } from '../action';
+import { ReturnAction, SignalActionPayload } from '../action';
 import { Action, ActionResult } from '../action';
 import { sql } from '../db';
 import { embedding } from '../utils';
@@ -55,7 +55,7 @@ class ChooseOrigin extends Action {
   }
 }
 
-class CreateCharacter extends SignalAction {
+class CreateCharacter extends ReturnAction {
   name = 'create-character';
   description = 'Create the final character';
   parameters = {
@@ -76,9 +76,6 @@ class CreateCharacter extends SignalAction {
       description: 'complete sentences? very casual? shortened sentences? mis-spellings? uses slang? etc.',
     },
   };
-  from_subsystem = 'characterBuilder';
-  subsystem = 'storyteller';
-  direction = 'in' as const;
 
   async payload(worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
     const embed = await embedding(`${parameters.short_description} ${parameters.backstory}`);
@@ -96,10 +93,6 @@ class CreateCharacter extends SignalAction {
     }
 
     return { name: parameters.name, id: character.id };
-  }
-
-  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
-    return JSON.stringify(response);
   }
 }
 
