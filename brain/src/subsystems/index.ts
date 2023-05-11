@@ -1,9 +1,9 @@
-import { MissionBuilder } from './missionBuilder';
+import { CharacterBuilder } from './characterBuilder';
 import { Storyteller } from './storyteller';
 
 const subsystems = {
   storyteller: new Storyteller(),
-  missionBuilder: new MissionBuilder(),
+  characterBuilder: new CharacterBuilder(),
 };
 
 export default subsystems;

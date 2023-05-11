@@ -1,4 +1,4 @@
-import { Action, ActionResult } from '../action';
+import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
@@ -6,9 +6,10 @@ import { LLMSubsystem } from './base';
 const BASE_PROMPT = `You are a superintelligent story designer for a perisistent video-game world. Your job is to design narratives that follow and extend parent narratives, and write a story that will be turned into a mission.
 
 - Dependencies such as characters must be created (or found via search) before they can be used in the story
-- Always search to for an existing character that meets the story's needs before attempting to creating a new one
+- It's important to always search to for an existing character that meets the story's needs before attempting to creating a new one
 - All characters included in the story must be explicitly created or identified before the story can be written
 - If you want to use a character you found in a search, you must add it to the story before using it
+- Stories should be simple and only within the scope requested. Think about why a character is critical to the story before searching/creating them
 - Once you have the dependencies you need, write the story
 
 You have access to a variety of actions to query and inspect the game state and world, as well as actions to create dependencies such as characters and write the final story:
@@ -22,23 +23,22 @@ You can only perform the actions you have have been given. You must only respond
 
 Set "action" to null if the thought chain is complete (no further action needed)`;
 
-const CHARACTER_NAMES = ['Aldus Wright', 'Martha Belkas', 'Lu Sin', 'Karl Kowalski'];
-
-class CreateCharacter extends Action {
+class CreateCharacter extends SignalAction {
   name = 'create-character';
   description = 'Create a character for use in the storyline, returns the name of the character';
   parameters = {
     description: { type: 'string', description: 'a description of the character' },
   };
+  from_subsystem = 'storyteller';
+  subsystem = 'characterBuilder';
+  direction = 'in' as const;
 
-  async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
-    const name = CHARACTER_NAMES[Math.floor(Math.random() * CHARACTER_NAMES.length)];
-
-    return { status: 'complete', data: name };
+  async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
+    return { command: `Create a character based on this description: ${parameters.description}` };
   }
 
-  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
-    return `Created ${data}`;
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Created character: ${JSON.stringify(response)}`;
   }
 }
 

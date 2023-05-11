@@ -85,7 +85,6 @@ export abstract class Action {
 
     const messageRes = await sql`insert into signals ${sql({
       world_id: thoughtProcess.world_id,
-      type: 'command',
       direction,
       from_subsystem,
       from_action_id: thoughtActionId,
@@ -202,14 +201,22 @@ export abstract class SignalAction extends Action {
   abstract direction: 'in' | 'out';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  abstract payload(parameters: Record<string, unknown>): Promise<SignalActionPayload>;
+  abstract payload(worldId: string, parameters: Record<string, unknown>): Promise<SignalActionPayload>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract responseToResult(parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string>;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
+    const thoughtProcessRes =
+      await sql`select world_id from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess) {
+      throw new Error(`Thought process not found for action ${thoughtActionId}`);
+    }
+
     if (!data?.messageId) {
-      const payload = await this.payload(parameters);
+      const payload = await this.payload(thoughtProcess.world_id, parameters);
       const messageId = await this.sendSignal(
         thoughtActionId,
         this.direction,
