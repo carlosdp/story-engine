@@ -16,8 +16,8 @@ create table storyline_stories (
 );
 
 create table storyline_characters (
-  id uuid primary key not null default gen_random_uuid(),
   storyline_id uuid references storylines(id) not null,
   character_id uuid references characters(id) not null,
+  primary key (storyline_id, character_id),
   created_at timestamp with time zone default now() not null
 );

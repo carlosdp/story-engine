@@ -11,9 +11,10 @@ const BASE_PROMPT = `You are a superintelligent story designer for a perisistent
 - All characters included in the story must be explicitly created or identified before the story can be written
 - If you want to use a character you must add it to the story before using it
 - If you use an existing character from search, make sure the character actually matches your need. An apprentice marksman is not a skilled marksman, for example.
-- Every character mentioned in the prompt must exist in the story
+- It's important that every character mentioned in the prompt is allocated to the story
 - You cannot re-use an already allocated character
 - Once you have the dependencies you need, write the story
+- If a mission story is requested for a player character, create a mission after the story is written
 
 You have access to a variety of actions to query and inspect the game state and world, as well as actions to create dependencies such as characters and write the final story:
 {actions}
@@ -93,10 +94,15 @@ class AddCharacterToStory extends Action {
     }
 
     const storylineId = storylines[0].id;
-    await sql`insert into storyline_characters ${sql({
-      storyline_id: storylineId,
-      character_id: parameters.id as string,
-    })}`;
+
+    try {
+      await sql`insert into storyline_characters ${sql({
+        storyline_id: storylineId,
+        character_id: parameters.id as string,
+      })}`;
+    } catch {
+      return { status: 'complete', data: 'Character already added' };
+    }
 
     return { status: 'complete', data: 'Character added' };
   }
@@ -130,18 +136,58 @@ class WriteStory extends Action {
       text: parameters.text as string,
     })}`;
 
-    return { status: 'complete', data: 'Story written succesfully' };
+    return { status: 'complete', data: { storylineId } };
   }
 
   async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
-    return data;
+    return `Story written to storyline ID ${data.storylineId}`;
+  }
+}
+
+class CreateMission extends SignalAction {
+  name = 'create-mission';
+  description = 'Create a mission for a player character';
+  parameters = {
+    characterId: { type: 'string', description: 'the character id' },
+    storylineId: { type: 'string', description: 'the storyline id' },
+  };
+  direction = 'in' as const;
+  from_subsystem = 'storyteller';
+  subsystem = 'missionBuilder';
+
+  async payload(_worldId: string, parameters: Record<string, unknown>): Promise<any> {
+    const characters =
+      await sql`select characters.id, characters.name from characters join storyline_characters on characters.id = storyline_characters.character_id where storyline_characters.storyline_id = ${
+        parameters.storylineId as string
+      }`;
+    const stories = await sql`select * from storyline_stories where storyline_id = ${
+      parameters.storylineId as string
+    } order by created_at desc limit 1`;
+    const story = stories[0].text;
+
+    return {
+      instructions: `Create a mission for character ${parameters.characterId} based on this story`,
+      storylineId: parameters.storylineId,
+      characters,
+      story,
+    };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Created mission: ${JSON.stringify(response)}`;
   }
 }
 
 export class Storyteller extends LLMSubsystem {
   name = 'storyteller';
   description = 'Responsible for managing storylines';
-  actions = [new CreateCharacter(), new SearchForCharacter(), new AddCharacterToStory(), new WriteStory()];
+  actions = [
+    new CreateCharacter(),
+    new SearchForCharacter(),
+    new AddCharacterToStory(),
+    new WriteStory(),
+    new CreateMission(),
+  ];
   basePrompt = BASE_PROMPT;
   model = 'gpt-4' as const;
   temperature = 0.1;
