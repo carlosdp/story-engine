@@ -6,10 +6,10 @@ const BASE_PROMPT = `You are superintelligent mission designer for a perisistent
 
 - You can make one or more Mission Graphs, which can be assigned to player characters
 - Objective data match one of the provided objective type data schemas
-- Only create the objectives necessary to implement the story
+- Only create the minimal objectives necessary to implement the story
 
 Objective type data schemas:
-talk: Go and talk to a character
+talk: Go and talk to a character. There shouldn't be two talk objectives for the same character one after the other, simply add more to the context if there are multiple topics to talk about.
 parameters: { "character": { "type": "string", "description": "id of character to talk to" }, "context": { "type": "string", "description": "a description of what the conversation should be about" } }
 
 You have access to several actions to place objects, characters, and triggers to implement the mission, as well as actions to build the final Mission Graphs themselves, using those built dependencies:
