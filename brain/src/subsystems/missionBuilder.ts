@@ -5,11 +5,12 @@ import { LLMSubsystem } from './base';
 const BASE_PROMPT = `You are superintelligent mission designer for a perisistent video-game world. Your job is to take a given storyline, and generate a Mission Graph that will be used by a game engine to implement the story in the game world.
 
 - You can make one or more Mission Graphs, which can be assigned to player characters
-- Objectives must match one of the provided objective type data schemas
+- Objective data match one of the provided objective type data schemas
 - Only create the objectives necessary to implement the story
 
-Objective types data schemas:
-Talk to Character: { "type": "talk", "character": "id of character to talk to", "context": "a description of what the conversation should be about" }
+Objective type data schemas:
+talk: Go and talk to a character
+parameters: { "character": { "type": "string", "description": "id of character to talk to" }, "context": { "type": "string", "description": "a description of what the conversation should be about" } }
 
 You have access to several actions to place objects, characters, and triggers to implement the mission, as well as actions to build the final Mission Graphs themselves, using those built dependencies:
 {actions}
@@ -41,7 +42,17 @@ class MissionGraph extends Action {
               'List of indexes in this objectives array for objectives that need to be completed before this one is active',
             items: { type: 'number' },
           },
-          data: { type: 'object', description: 'The data for this objective' },
+          data: {
+            type: 'object',
+            description: 'The data for this objective',
+            properties: {
+              type: {
+                type: 'string',
+                description: 'the objective type',
+                parameters: { type: 'object', description: 'the parameters for this objective' },
+              },
+            },
+          },
         },
       },
     },
