@@ -20,3 +20,23 @@ create table mission_objectives (
   data jsonb not null,
   created_at timestamp with time zone not null default now()
 );
+
+-- a postgres function that returns each mission with all characters as a jsonb column and objectives as a jsonb column
+create or replace function hydrated_missions()
+returns table (
+  id uuid,
+  storyline_id uuid,
+  characters jsonb,
+  objectives jsonb
+) as $$
+  select
+    m.id,
+    m.storyline_id,
+    jsonb_agg(jsonb_build_object('id', c.id, 'name', c.name)) as characters,
+    jsonb_agg(jsonb_build_object('id', o.id, 'instructions', o.instructions, 'data', o.data)) as objectives
+  from missions m
+  left join mission_characters mc on mc.mission_id = m.id
+  left join characters c on c.id = mc.character_id
+  left join mission_objectives o on o.mission_id = m.id
+  group by m.id
+$$ language sql stable;
