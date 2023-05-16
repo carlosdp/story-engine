@@ -217,6 +217,9 @@ export abstract class LLMSubsystem implements Subsystem {
     return thoughtProcessRes[0].id;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async prepareThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<void> {}
+
   async processSignal(message: SubsystemMessage): Promise<string> {
     const messages = [
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
@@ -231,6 +234,8 @@ export abstract class LLMSubsystem implements Subsystem {
     }
 
     const thoughtProcessId = await this.createThoughtProcess(message, parentThoughtProcessId);
+
+    await this.prepareThoughtProcess(thoughtProcessId, message);
 
     const response = await this.processMessages(thoughtProcessId, messages);
 

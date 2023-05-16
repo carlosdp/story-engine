@@ -1,6 +1,7 @@
 import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import logger from '../logging';
+import { SubsystemMessage } from '../signal';
 import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
 
@@ -191,4 +192,36 @@ export class Storyteller extends LLMSubsystem {
   basePrompt = BASE_PROMPT;
   model = 'gpt-4' as const;
   temperature = 0.1;
+
+  override async prepareThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<void> {
+    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
+
+    if (storylines.length === 0) {
+      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
+
+      const thoughtProcesses = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
+      const thoughtProcess = thoughtProcesses[0];
+
+      if (!thoughtProcess) {
+        throw new Error(`No thought process found for id ${thoughtProcessId}`);
+      }
+
+      const storylinesRes = await sql`insert into storylines ${sql({
+        world_id: thoughtProcess.world_id,
+        storyteller_id: thoughtProcessId,
+        prompt: message.payload.prompt,
+      })} returning id`;
+      const storylineId = storylinesRes[0].id;
+
+      // associate player character with storyline
+      if (message.payload.attachedCharacters) {
+        for (const character of message.payload.attachedCharacters) {
+          await sql`insert into storyline_characters ${sql({
+            storyline_id: storylineId,
+            character_id: character.id,
+          })}`;
+        }
+      }
+    }
+  }
 }
