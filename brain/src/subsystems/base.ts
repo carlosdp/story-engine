@@ -10,12 +10,17 @@ export type ActionCommand = {
   parameters: Record<string, unknown>;
 };
 
-export abstract class Subsystem {
+export abstract class Thinker {
   abstract processSignal(message: SubsystemMessage): Promise<string>;
   abstract continueProcessing(thoughtProcessId: string, completedActionId: string): Promise<string>;
   abstract getAction(name: string): Action | undefined;
+}
 
-  static async processSignals(subsystems: Record<string, Subsystem>, signals: any[]): Promise<string[]> {
+type ThinkerConstructor = new () => Thinker;
+
+// eslint-disable-next-line unicorn/no-static-only-class
+export class Think {
+  static async processSignals(subsystems: Record<string, ThinkerConstructor>, signals: any[]): Promise<string[]> {
     const thoughtProcessIds: string[] = [];
 
     for (const signal of signals) {
@@ -92,7 +97,8 @@ export abstract class Subsystem {
       const subsystem = subsystems[signal.subsystem as keyof typeof subsystems];
 
       try {
-        const thoughtProcessId = await subsystem.processSignal(signal as SubsystemMessage);
+        const subsystemInstance = new subsystem();
+        const thoughtProcessId = await subsystemInstance.processSignal(signal as SubsystemMessage);
         await this.acknowledgeSignal(signal.id);
 
         thoughtProcessIds.push(thoughtProcessId);
@@ -107,7 +113,7 @@ export abstract class Subsystem {
     return thoughtProcessIds;
   }
 
-  static async processActions(subsystems: Record<string, Subsystem>, actions: any[]) {
+  static async processActions(subsystems: Record<string, ThinkerConstructor>, actions: any[]) {
     for (const processAction of actions) {
       logger.debug(`Processing thought process action ${processAction.id}`);
 
@@ -120,8 +126,9 @@ export abstract class Subsystem {
       }
 
       const subsystem = subsystems[thoughtProcess.subsystem as keyof typeof subsystems];
+      const subsystemInstance = new subsystem();
 
-      const action = subsystem.getAction(processAction.action);
+      const action = subsystemInstance.getAction(processAction.action);
 
       if (!action) {
         logger.error(`Invalid action: ${processAction.action}`);
@@ -149,7 +156,7 @@ export abstract class Subsystem {
         await sql`update thought_process_actions set result = ${result} where id = ${processAction.id}`;
 
         try {
-          await subsystem.continueProcessing(processAction.thought_process_id, processAction.id);
+          await subsystemInstance.continueProcessing(processAction.thought_process_id, processAction.id);
         } catch (error) {
           const exception = error as Error;
           logger.error(`Failed to continue processing: ${exception.message}\n${exception.stack}`);
@@ -163,8 +170,7 @@ export abstract class Subsystem {
   }
 }
 
-export abstract class LLMSubsystem implements Subsystem {
-  abstract name: string;
+export abstract class LLMSubsystem extends Think {
   abstract basePrompt: string;
   abstract actions: Action[];
 
@@ -172,6 +178,10 @@ export abstract class LLMSubsystem implements Subsystem {
   temperature = 0.4;
 
   private cachedAvailableActions: Record<string, Action> | null = null;
+
+  get name() {
+    return typeof this.constructor.name === 'string' ? this.constructor.name : 'Unknown';
+  }
 
   getAction(name: string) {
     return this.actions.find(action => action.name === name);
@@ -218,7 +228,7 @@ export abstract class LLMSubsystem implements Subsystem {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async prepareThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<void> {}
+  async prepareThoughtProcess(_thoughtProcessId: string, _message: SubsystemMessage): Promise<void> {}
 
   async processSignal(message: SubsystemMessage): Promise<string> {
     const messages = [
@@ -377,7 +387,7 @@ export abstract class LLMSubsystem implements Subsystem {
   }
 }
 
-export abstract class DeterministicSubsystem implements Subsystem {
+export abstract class DeterministicSubsystem extends Think {
   abstract name: string;
   abstract actions: Action[];
 

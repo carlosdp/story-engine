@@ -2,7 +2,7 @@ import { Job } from 'pg-boss';
 
 import { sql } from '../db';
 import { StartCharacterJob } from '../jobs';
-import { Subsystem } from '../subsystems/base';
+import { Think } from '../subsystems/base';
 import { Storyteller } from '../subsystems/storyteller';
 
 export default async (job: Job<StartCharacterJob>) => {
@@ -19,7 +19,7 @@ export default async (job: Job<StartCharacterJob>) => {
     command: job.data.prompt,
     allocatedCharacters: [{ id: character.id, name: character.name, description: character.description }],
   });
-  await Subsystem.acknowledgeSignal(signal.id);
+  await Think.acknowledgeSignal(signal.id);
 
   const thoughtProcessId = await storyteller.createThoughtProcess(signal);
 

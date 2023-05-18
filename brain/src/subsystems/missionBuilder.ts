@@ -96,7 +96,6 @@ class MissionGraph extends Action {
 }
 
 export class MissionBuilder extends LLMSubsystem {
-  name = 'missionBuilder';
   description = 'Responsible for managing missions';
   actions = [new MissionGraph()];
   basePrompt = BASE_PROMPT;

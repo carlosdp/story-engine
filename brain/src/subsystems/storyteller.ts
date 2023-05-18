@@ -180,7 +180,6 @@ class CreateMission extends SignalAction {
 }
 
 export class Storyteller extends LLMSubsystem {
-  name = 'storyteller';
   description = 'Responsible for managing storylines';
   actions = [
     new CreateCharacter(),

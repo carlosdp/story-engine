@@ -2,6 +2,7 @@ import { validate } from 'jsonschema';
 
 import { sql } from './db';
 import { ActionGate } from './gate';
+import type { Thinker } from './subsystems/base';
 import { embedding } from './utils';
 
 export type Observation = {
@@ -19,10 +20,6 @@ export abstract class Action {
   abstract name: string;
   abstract description: string;
   abstract parameters: Record<string, any>;
-
-  static STATUS_COMPLETE = 'complete' as const;
-  static STATUS_FAILED = 'failed' as const;
-  static STATUS_WAITING = 'waiting' as const;
 
   gates: ActionGate[] = [];
 
@@ -177,18 +174,18 @@ export abstract class Action {
         'logistics'
       );
 
-      return { status: Action.STATUS_WAITING, data: { resourceConsumptionMessageId: messageId } };
+      return { status: 'waiting', data: { resourceConsumptionMessageId: messageId } };
     }
 
     const response = await this.getSignalResponse(data.resourceConsumptionMessageId);
 
     if (!response) {
-      return { status: Action.STATUS_WAITING, data };
+      return { status: 'waiting', data };
     }
 
     const { success } = response;
 
-    return success ? { status: Action.STATUS_COMPLETE, data } : { status: Action.STATUS_FAILED };
+    return success ? { status: 'complete', data } : { status: 'failed' };
   }
 }
 
@@ -197,7 +194,7 @@ export type SignalActionPayload = any;
 
 export abstract class SignalAction extends Action {
   from_subsystem: string | null = null;
-  abstract subsystem: string;
+  abstract subsystem: new () => Thinker;
   abstract direction: 'in' | 'out';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -220,20 +217,20 @@ export abstract class SignalAction extends Action {
       const messageId = await this.sendSignal(
         thoughtActionId,
         this.direction,
-        this.subsystem,
+        this.subsystem.name,
         payload,
         this.from_subsystem
       );
-      return { status: Action.STATUS_WAITING, data: { messageId } };
+      return { status: 'waiting', data: { messageId } };
     } else {
       const response = await this.getSignalResponse(data.messageId);
       if (response === null) {
-        return { status: Action.STATUS_WAITING, data };
+        return { status: 'waiting', data };
       } else if (response === false) {
-        return { status: Action.STATUS_FAILED };
+        return { status: 'failed' };
       }
 
-      return { status: Action.STATUS_COMPLETE, data: { ...data, responsePayload: response } };
+      return { status: 'complete', data: { ...data, responsePayload: response } };
     }
   }
 
@@ -244,6 +241,7 @@ export abstract class SignalAction extends Action {
 }
 
 export abstract class ReturnAction extends SignalAction {
+  // @ts-ignore
   subsystem = '';
   direction = 'in' as const;
 

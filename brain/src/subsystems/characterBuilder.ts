@@ -98,7 +98,6 @@ class CreateCharacter extends ReturnAction {
 }
 
 export class CharacterBuilder extends LLMSubsystem {
-  name = 'characterBuilder';
   description = 'Responsible for creating new characters';
   actions = [new ChooseGender(), new ChooseOrigin(), new CreateCharacter()];
   basePrompt = BASE_PROMPT;

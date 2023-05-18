@@ -90,7 +90,6 @@ class CreateMission extends SignalAction {
 }
 
 export class PlayerStarter extends LLMSubsystem {
-  name = 'playerStarter';
   description = 'Responsible for creating a player character and starter mission';
   actions = [new CreateCharacter(), new AttachCharacterToPlayer(), new CreateMission()];
   basePrompt = BASE_PROMPT;
