@@ -22,3 +22,5 @@ $$ language plpgsql;
 
 create view players_with_characters as
   select players.id as player_id, players.name as player_name, characters.* from players left join characters on characters.id = players.character_id;
+create view npc_characters as
+  select characters.* from characters left join players on characters.id = players.character_id where players.id is null;
