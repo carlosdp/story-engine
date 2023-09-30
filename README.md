@@ -1,10 +1,9 @@
 # StoryWeaver
 This is the Story Weaver brain and control UI.
 
-## Using Tunnel to develop
-1. Request an Ngrok auth token from Carlos.
-2. Add the auth token to your environment as `NGROK_AUTH_TOKEN`, and choose a subdomain for your tunnel as `NGROK_SUBDOMAIN` (https://{yoursubdomain}.ngrok.io). **DO NOT** put these in a `.env` file or anything in the repo, put them in your machine's environment.
-3. Run `yarn dev:tunnel` to start your local brain server.
+## Local Development
+1. Start local Supabase by running `supabase start` (must have [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) installed)
+2. Run `yarn dev`
 
 ## Thinking Architecture
 The AI is composed of several GPT-based agent "subsystems", orchestrated using "signals". Each subsystem can influence the game world, and retrieve data using "actions".
