@@ -5,7 +5,7 @@ This is the Story Weaver brain and control UI.
 1. Start local Supabase by running `supabase start` (must have [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) installed)
 2. Run `yarn dev`
 
-## Thinking Architecture
+## Thinking Architecture (note: this is outdated, from the old project)
 The AI is composed of several GPT-based agent "subsystems", orchestrated using "signals". Each subsystem can influence the game world, and retrieve data using "actions".
 
 Example subsystems:
