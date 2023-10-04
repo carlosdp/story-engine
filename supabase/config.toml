@@ -62,6 +62,6 @@ enable_confirmations = false
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `twitch`, `twitter`, `slack`, `spotify`.
 [auth.external.discord]
 enabled = true
-client_id = "1099056370571030579"
-secret = "8dElvvV2q8GKPLyE6XseDMKpG4xAv5MW"
+client_id = "1158573937844817950"
+secret = "rBWuro6E2YIhCJCj5CccnoubrLCKLbeP"
 redirect_uri = "http://localhost:3000/supabase/auth/v1/callback"

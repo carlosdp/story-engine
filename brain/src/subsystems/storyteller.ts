@@ -4,6 +4,8 @@ import logger from '../logging';
 import { SubsystemMessage } from '../signal';
 import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
+import { CharacterBuilder } from './characterBuilder';
+import { MissionBuilder } from './missionBuilder';
 
 const BASE_PROMPT = `You are a superintelligent story designer for a perisistent video-game world. Your job is to design narratives that follow and extend parent narratives, and write a story that will be turned into a mission.
 
@@ -35,7 +37,7 @@ class CreateCharacter extends SignalAction {
     description: { type: 'string', description: 'a description of the character' },
   };
   from_subsystem = 'storyteller';
-  subsystem = 'characterBuilder';
+  subsystem = CharacterBuilder;
   direction = 'in' as const;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
@@ -154,7 +156,7 @@ class CreateMission extends SignalAction {
   };
   direction = 'in' as const;
   from_subsystem = 'storyteller';
-  subsystem = 'missionBuilder';
+  subsystem = MissionBuilder;
 
   async payload(_worldId: string, parameters: Record<string, unknown>): Promise<any> {
     const characters =
@@ -179,6 +181,39 @@ class CreateMission extends SignalAction {
   }
 }
 
+class AttachStoryToScenario extends Action {
+  name = 'attach-story-to-scenario';
+  description = 'Attach this story to a scenario ID (if one was provided in the prompt)';
+  parameters = {
+    scenario_id: { type: 'string', description: 'the scenario ID' },
+  };
+
+  async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
+    const thoughtProcessRes =
+      await sql`select thought_process_id from thought_process_actions where id = ${thoughtActionId}`;
+    const thoughtProcessId = thoughtProcessRes[0].thought_process_id;
+    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
+    if (storylines.length === 0) {
+      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
+      return { status: 'failed' };
+    }
+
+    const storylineId = storylines[0].id;
+
+    try {
+      await sql`update storylines set scenario_id = ${parameters.scenario_id as string} where id = ${storylineId}`;
+    } catch {
+      return { status: 'complete', data: 'Scenario could not be found, skipping' };
+    }
+
+    return { status: 'complete', data: 'Story attached to scenario' };
+  }
+
+  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
+    return data;
+  }
+}
+
 export class Storyteller extends LLMSubsystem {
   description = 'Responsible for managing storylines';
   actions = [
@@ -187,6 +222,7 @@ export class Storyteller extends LLMSubsystem {
     new AddCharacterToStory(),
     new WriteStory(),
     new CreateMission(),
+    new AttachStoryToScenario(),
   ];
   basePrompt = BASE_PROMPT;
   model = 'gpt-4' as const;

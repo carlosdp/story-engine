@@ -1,6 +1,8 @@
 import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import { LLMSubsystem } from './base';
+import { CharacterBuilder } from './characterBuilder';
+import { Storyteller } from './storyteller';
 
 const BASE_PROMPT = `You are a subsystem responsible for creating a character for a player, and a starter mission.
 
@@ -26,7 +28,7 @@ class CreateCharacter extends SignalAction {
     description: { type: 'string', description: 'a description of the character' },
   };
   from_subsystem = 'playerStarter';
-  subsystem = 'characterBuilder';
+  subsystem = CharacterBuilder;
   direction = 'in' as const;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
@@ -67,7 +69,7 @@ class CreateMission extends SignalAction {
     description: { type: 'string', description: 'a description of the mission' },
   };
   from_subsystem = 'playerStarter';
-  subsystem = 'storyteller';
+  subsystem = Storyteller;
   direction = 'in' as const;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
