@@ -21,3 +21,7 @@ export type StartCharacterJob = {
   playerCharacterId: string;
   prompt: string;
 };
+
+export type CreateScenarioJob = {
+  scenarioId: string;
+};

@@ -36,7 +36,7 @@ class CreateCharacter extends SignalAction {
   parameters = {
     description: { type: 'string', description: 'a description of the character' },
   };
-  from_subsystem = 'storyteller';
+  from_subsystem = Storyteller;
   subsystem = CharacterBuilder;
   direction = 'in' as const;
 
@@ -155,7 +155,7 @@ class CreateMission extends SignalAction {
     storylineId: { type: 'string', description: 'the storyline id' },
   };
   direction = 'in' as const;
-  from_subsystem = 'storyteller';
+  from_subsystem = Storyteller;
   subsystem = MissionBuilder;
 
   async payload(_worldId: string, parameters: Record<string, unknown>): Promise<any> {
@@ -181,39 +181,6 @@ class CreateMission extends SignalAction {
   }
 }
 
-class AttachStoryToScenario extends Action {
-  name = 'attach-story-to-scenario';
-  description = 'Attach this story to a scenario ID (if one was provided in the prompt)';
-  parameters = {
-    scenario_id: { type: 'string', description: 'the scenario ID' },
-  };
-
-  async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
-    const thoughtProcessRes =
-      await sql`select thought_process_id from thought_process_actions where id = ${thoughtActionId}`;
-    const thoughtProcessId = thoughtProcessRes[0].thought_process_id;
-    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
-    if (storylines.length === 0) {
-      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
-      return { status: 'failed' };
-    }
-
-    const storylineId = storylines[0].id;
-
-    try {
-      await sql`update storylines set scenario_id = ${parameters.scenario_id as string} where id = ${storylineId}`;
-    } catch {
-      return { status: 'complete', data: 'Scenario could not be found, skipping' };
-    }
-
-    return { status: 'complete', data: 'Story attached to scenario' };
-  }
-
-  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, data: any): Promise<string> {
-    return data;
-  }
-}
-
 export class Storyteller extends LLMSubsystem {
   description = 'Responsible for managing storylines';
   actions = [
@@ -222,7 +189,6 @@ export class Storyteller extends LLMSubsystem {
     new AddCharacterToStory(),
     new WriteStory(),
     new CreateMission(),
-    new AttachStoryToScenario(),
   ];
   basePrompt = BASE_PROMPT;
   model = 'gpt-4' as const;
@@ -245,6 +211,7 @@ export class Storyteller extends LLMSubsystem {
         world_id: thoughtProcess.world_id,
         storyteller_id: thoughtProcessId,
         prompt: message.payload.prompt,
+        scenario_id: message.payload.scenarioId ?? null,
       })} returning id`;
       const storylineId = storylinesRes[0].id;
 

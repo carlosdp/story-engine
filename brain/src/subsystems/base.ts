@@ -144,8 +144,6 @@ export class Think {
         continue;
       }
 
-      await sql`update thought_process_actions set status = ${actionResult.status}, data = ${actionResult.data} where id = ${processAction.id}`;
-
       if (actionResult.status === 'complete') {
         logger.debug(`Action result: ${JSON.stringify(actionResult)} ${actionResult.status}`);
         const result = await action.result(
@@ -162,6 +160,8 @@ export class Think {
           logger.error(`Failed to continue processing: ${exception.message}\n${exception.stack}`);
         }
       }
+
+      await sql`update thought_process_actions set status = ${actionResult.status}, data = ${actionResult.data} where id = ${processAction.id}`;
     }
   }
 

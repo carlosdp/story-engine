@@ -30,7 +30,7 @@ export const useThoughtProcess = (id: string) => {
       }
 
       const { data: signals, error: signalsError } = await client
-        .from('messages')
+        .from('signals')
         .select('*')
         .in(
           'from_action_id',
@@ -41,7 +41,7 @@ export const useThoughtProcess = (id: string) => {
       }
 
       const { data: responseSignals, error: responseSignalsError } = await client
-        .from('messages')
+        .from('signals')
         .select('*')
         .in(
           'response_to',

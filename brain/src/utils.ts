@@ -16,6 +16,7 @@ export const message = async (
     retryCondition: error =>
       axiosRetry.isNetworkOrIdempotentRequestError(error) ||
       error.response?.status === 429 ||
+      error.response?.status === 500 ||
       error.response?.status === 502,
   });
   const data = {

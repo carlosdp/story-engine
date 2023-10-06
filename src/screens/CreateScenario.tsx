@@ -1,31 +1,33 @@
 import { Button, Flex, FormControl, FormErrorMessage, FormLabel, Heading, Input, Textarea } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { PageContainer } from '../components/PageContainer';
-import { useCreateWorld } from '../hooks/useCreateWorld';
+import { useCreateScenario } from '../hooks/useCreateScenario';
 
-type WorldCreationParameters = {
+type ScenarioCreationParameters = {
   name: string;
   description: string;
 };
 
-export const CreateWorld = () => {
+export const CreateScenario = () => {
+  const { worldId } = useParams<{ worldId: string }>();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState } = useForm<WorldCreationParameters>();
-  const { create } = useCreateWorld();
+  const { register, handleSubmit, formState } = useForm<ScenarioCreationParameters>();
+  const { create } = useCreateScenario();
 
-  const onSubmit: SubmitHandler<WorldCreationParameters> = useCallback(
+  const onSubmit: SubmitHandler<ScenarioCreationParameters> = useCallback(
     async data => {
-      const newWorldId = await create({
+      const newScenarioId = await create({
+        world_id: worldId!,
         name: data.name,
         description: data.description,
       });
 
-      navigate(`/worlds/${newWorldId}/scenarios/create`);
+      navigate(`/worlds/${worldId}/scenarios/${newScenarioId}`);
     },
-    [create, navigate]
+    [create, navigate, worldId]
   );
 
   return (
@@ -34,12 +36,12 @@ export const CreateWorld = () => {
       <Flex flexDirection="column" gap="22px">
         <Flex flexDirection="column" gap="12px">
           <FormControl isInvalid={!!formState.errors.name} isRequired={true}>
-            <FormLabel>World Name</FormLabel>
+            <FormLabel>Scenario Name</FormLabel>
             <Input {...register('name', { required: true })} />
             {formState.errors.name && <FormErrorMessage>{formState.errors.name.message}</FormErrorMessage>}
           </FormControl>
           <FormControl isInvalid={!!formState.errors.description} isRequired={true}>
-            <FormLabel>Describe your world</FormLabel>
+            <FormLabel>Describe the story of the scenario</FormLabel>
             <Textarea {...register('description', { required: true })} />
             {formState.errors.description && (
               <FormErrorMessage>{formState.errors.description.message}</FormErrorMessage>

@@ -907,6 +907,23 @@ export interface Database {
           world_id?: string | null
         }
       }
+      scenario_characters: {
+        Row: {
+          allocated: boolean | null
+          backstory: string | null
+          created_at: string | null
+          deceased: boolean | null
+          description: string | null
+          embedding: unknown | null
+          id: string | null
+          name: string | null
+          personality: string | null
+          scenario_id: string | null
+          updated_at: string | null
+          world_id: string | null
+          writing_style: string | null
+        }
+      }
       staff_users: {
         Row: {
           user_id: string | null
@@ -940,6 +957,14 @@ export interface Database {
           ids: string[]
         }
         Returns: undefined
+      }
+      create_scenario: {
+        Args: {
+          world_id: string
+          name: string
+          description: string
+        }
+        Returns: string
       }
       create_world: {
         Args: {

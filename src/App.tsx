@@ -9,12 +9,15 @@ import { CharacterDetail } from './screens/CharacterDetail';
 import { CharacterList } from './screens/CharacterList';
 import { ConversationDetail } from './screens/ConversationDetail';
 import { ConversationList } from './screens/ConversationList';
+import { CreateScenario } from './screens/CreateScenario';
 import { CreateWorld } from './screens/CreateWorld';
 import { GenerateCharacters } from './screens/GenerateCharacters';
 import { GenerateLetter } from './screens/GenerateLetter';
 import { Login } from './screens/Login';
 import { MockSignals } from './screens/MockSignals';
 import { Observations } from './screens/Observations';
+import { ScenarioDetail } from './screens/ScenarioDetail';
+import { Scenarios } from './screens/Scenarios';
 import { ThoughtProcessDetails } from './screens/ThoughtProcessDetails';
 import { ThoughtProcesses } from './screens/ThoughtProcesses';
 
@@ -33,8 +36,11 @@ function App() {
         <Route element={<AuthenticatedRoutes />}>
           <Route path="/" element={<WorldDefault />} />
           <Route path="/worlds/create" element={<CreateWorld />} />
+          <Route path="/worlds/:worldId/scenarios" element={<Scenarios />} />
           <Route path="/worlds/:worldId/characters" element={<CharacterList />} />
+          <Route path="/worlds/:worldId/scenarios/create" element={<CreateScenario />} />
           <Route path="/worlds/:worldId/generate-characters" element={<GenerateCharacters />} />
+          <Route path="/scenarios/:id" element={<ScenarioDetail />} />
           <Route path="/characters/:id" element={<CharacterDetail />} />
           <Route path="/worlds/:worldId/thought_processes" element={<ThoughtProcesses />} />
           <Route path="/thought_processes/:id" element={<ThoughtProcessDetails />} />

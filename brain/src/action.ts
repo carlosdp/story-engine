@@ -193,7 +193,7 @@ export abstract class Action {
 export type SignalActionPayload = any;
 
 export abstract class SignalAction extends Action {
-  from_subsystem: string | null = null;
+  from_subsystem: (new () => Thinker) | null = null;
   abstract subsystem: new () => Thinker;
   abstract direction: 'in' | 'out';
 
@@ -219,7 +219,7 @@ export abstract class SignalAction extends Action {
         this.direction,
         this.subsystem.name,
         payload,
-        this.from_subsystem
+        this.from_subsystem?.name
       );
       return { status: 'waiting', data: { messageId } };
     } else {
@@ -242,7 +242,7 @@ export abstract class SignalAction extends Action {
 
 export abstract class ReturnAction extends SignalAction {
   // @ts-ignore
-  subsystem = '';
+  subsystem = { name: '' };
   direction = 'in' as const;
 
   async responseToResult(_parameters: Record<string, unknown>, _response: any): Promise<string> {
@@ -266,8 +266,9 @@ export abstract class ReturnAction extends SignalAction {
       throw new Error(`Initiating message not found for action ${thoughtActionId}`);
     }
 
-    this.from_subsystem = thoughtProcess.subsystem;
-    this.subsystem = initiatingMessage.from_subsystem;
+    // @ts-ignore
+    this.from_subsystem = { name: thoughtProcess.subsystem };
+    this.subsystem = { name: initiatingMessage.from_subsystem };
 
     const result = super.execute(thoughtActionId, parameters, data);
 

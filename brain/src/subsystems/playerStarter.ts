@@ -27,7 +27,7 @@ class CreateCharacter extends SignalAction {
   parameters = {
     description: { type: 'string', description: 'a description of the character' },
   };
-  from_subsystem = 'playerStarter';
+  from_subsystem = PlayerStarter;
   subsystem = CharacterBuilder;
   direction = 'in' as const;
 
@@ -68,7 +68,7 @@ class CreateMission extends SignalAction {
     characterId: { type: 'string', description: 'the character id' },
     description: { type: 'string', description: 'a description of the mission' },
   };
-  from_subsystem = 'playerStarter';
+  from_subsystem = PlayerStarter;
   subsystem = Storyteller;
   direction = 'in' as const;
 

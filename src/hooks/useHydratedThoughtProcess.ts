@@ -28,7 +28,7 @@ export const useHydratedThoughtProcess = (id: string) => {
       }
 
       const { data: initiatingSignal, error: initiatingSignalError } = await client
-        .from('messages')
+        .from('signals')
         .select('*')
         .eq(
           'id',
@@ -51,7 +51,7 @@ export const useHydratedThoughtProcess = (id: string) => {
       }
 
       const { data: signals, error: signalsError } = await client
-        .from('messages')
+        .from('signals')
         .select('*')
         .in(
           'from_action_id',

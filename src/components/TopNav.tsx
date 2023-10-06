@@ -6,6 +6,7 @@ import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useWorlds } from '../hooks/useWorlds';
 
 const nav = {
+  Scenarios: '/scenarios',
   Characters: '/characters',
   'Thought Processes': '/thought_processes',
   Conversations: '/conversations',

@@ -1,6 +1,7 @@
 import { boss } from './db';
 import logger from './logging';
 import completeResearch from './tasks/completeResearch';
+import createScenario from './tasks/createScenario';
 import generateCharacters from './tasks/generateCharacters';
 import generateDialogue from './tasks/generateDialogue';
 import generateLetter from './tasks/generateLetter';
@@ -26,6 +27,7 @@ const jobFunctions = {
   generateDialogue: generateDialogue,
   generateRandomDialogue: generateRandomDialogue,
   startCharacter: startCharacter,
+  createScenario: createScenario,
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types

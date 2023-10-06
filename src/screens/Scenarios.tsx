@@ -2,11 +2,11 @@ import { Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@
 import { Link, useParams } from 'react-router-dom';
 
 import { PageContainer } from '../components/PageContainer';
-import { useCharacters } from '../hooks/useCharacters';
+import { useScenarios } from '../hooks/useScenarios';
 
-export const CharacterList = () => {
+export const Scenarios = () => {
   const { worldId } = useParams<{ worldId: string }>();
-  const { data: characters, isLoading } = useCharacters(worldId!);
+  const { data: scenarios, isLoading } = useScenarios(worldId!);
 
   if (isLoading) {
     return (
@@ -19,24 +19,22 @@ export const CharacterList = () => {
   return (
     <PageContainer>
       <Box>
-        <Button as={Link} to={`/worlds/${worldId}/generate-characters`}>
-          Generate
+        <Button as={Link} to={`/worlds/${worldId}/scenarios/create`}>
+          Create New
         </Button>
       </Box>
       <Table>
         <Thead>
           <Tr>
             <Th>Name</Th>
-            <Th>Description</Th>
           </Tr>
         </Thead>
         <Tbody>
-          {characters?.map(character => (
-            <Tr key={character.id}>
+          {scenarios?.map(scenario => (
+            <Tr key={scenario.id}>
               <Td>
-                <Link to={`/characters/${character.id}`}>{character.name}</Link>
+                <Link to={`/scenarios/${scenario.id}`}>{scenario.name}</Link>
               </Td>
-              <Td>{character.description}</Td>
             </Tr>
           ))}
         </Tbody>
