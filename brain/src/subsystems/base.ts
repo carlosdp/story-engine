@@ -170,9 +170,24 @@ export class Think {
   }
 }
 
+const ACTION_INSTRUCTIONS = `You have access to several actions to gather information and execute instructions:
+{actions}
+
+Based on the input, think about the next action to take. For example:
+
+{ "thought": "I need to do X", "action": "action name here", "parameters": {} }
+
+"parameters" must be a JSON object conforming to the action's Parameters JSON Schema.
+
+You can only perform the actions you have have been given. You must only respond in this thought/action format.
+
+Set "action" to null if the thought chain is complete (no further action needed)`;
+
 export abstract class LLMSubsystem extends Think {
-  abstract basePrompt: string;
   abstract actions: Action[];
+  abstract agentPurpose: string;
+
+  abstract instructions(_thoughtProcessId: string): Promise<string[]>;
 
   model: 'gpt-3.5-turbo' | 'gpt-4' | 'gpt-4-0613' = 'gpt-3.5-turbo';
   temperature = 0.4;
@@ -359,18 +374,15 @@ export abstract class LLMSubsystem extends Think {
     return response;
   }
 
-  async assemblePrompt(_thoughtProcessId: string) {
-    return this.basePrompt;
-  }
-
   private async generateBaseMessage(thoughtProcessId: string) {
-    const basePrompt = await this.assemblePrompt(thoughtProcessId);
-    const prompt = basePrompt.replace(
+    const instructions = await this.instructions(thoughtProcessId);
+    const actionsInstruction = ACTION_INSTRUCTIONS.replace(
       '{actions}',
       Object.values(await this.availableActions(thoughtProcessId))
         .map(action => action.serializeDefinition())
         .join('\n')
     );
+    const prompt = `${this.agentPurpose}\n\n${instructions.map(i => '- ' + i).join('\n')}\n\n${actionsInstruction}`;
 
     return { role: 'system', content: prompt };
   }

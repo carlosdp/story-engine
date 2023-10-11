@@ -61,7 +61,7 @@ export abstract class Action {
   }
 
   serializeDefinition() {
-    return `${this.name}: ${this.description}. Parameters: ${JSON.stringify(this.parameters)}`;
+    return `${this.name}: ${this.description}. Parameters JSON Schema: ${JSON.stringify(this.parameters)}`;
   }
 
   protected async sendSignal(

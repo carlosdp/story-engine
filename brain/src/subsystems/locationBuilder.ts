@@ -4,24 +4,6 @@ import { sql } from '../db';
 import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
 
-const BASE_PROMPT = `You are superintelligent world designer for a perisistent video-game world. Your job is to create the requested location(s) that fits into the world, and the story.
-
-- Start by reflecting on what kind of location you need to create. A town? city? planet? country?
-- Once you have the necessary information, create the location
-
-World Description: {world_description}
-
-You have access to several actions to gather information needed, as well as actions to finally create the location:
-{actions}
-
-Based on the input, think about the next action to take. For example:
-
-{ "thought": "I need to do X", "action": "action name here", "parameters": {} }
-
-You can only perform the actions you have have been given. You must only respond in this thought/action format.
-
-Set "action" to null if the thought chain is complete (no further action needed)`;
-
 class SelfReflection extends Action {
   name = 'self-reflection';
   description = 'Reflect on a thought or idea to inform later action decisions';
@@ -76,14 +58,19 @@ class CreateLocation extends ReturnAction {
 export class LocationBuilder extends LLMSubsystem {
   description = 'Responsible for creating new world locations';
   actions = [new SelfReflection(), new CreateLocation()];
-  basePrompt = BASE_PROMPT;
-  model = 'gpt-4' as const;
+  agentPurpose =
+    'You are superintelligent world designer for a perisistent video-game world. Your job is to create the requested location(s) that fits into the world, and the story.';
+  model = 'gpt-4-0613' as const;
 
-  override async assemblePrompt(thoughtProcessId: string): Promise<string> {
+  override async instructions(thoughtProcessId: string): Promise<string[]> {
     const worlds =
       await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${thoughtProcessId}`;
     const world = worlds[0];
 
-    return this.basePrompt.replace('{world_description}', world.description);
+    return [
+      'Start by reflecting on what kind of location you need to create. A town? city? planet? country?',
+      'Once you have the necessary information, create the location',
+      `Consider this World Description: ${world.description}`,
+    ];
   }
 }

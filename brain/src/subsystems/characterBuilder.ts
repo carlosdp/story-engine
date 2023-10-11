@@ -5,27 +5,6 @@ import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
 import { getRandomCountry } from './countries';
 
-const BASE_PROMPT = `You are superintelligent character designer for a perisistent video-game world. Your job is to create the requested character that fits into the world, and the story.
-
-- Start by generating a gender and origin for the character
-- Once you have the necessary information, create the character
-- Characters should have first and last names, unless it's an explicit choice to have a single word name
-
-World Description: {world_description}
-
-You have access to several actions to gather information about other characters, relationships, organizations, and stories, as well as actions to finally create the character:
-{actions}
-
-Based on the input, think about the next action to take. For example:
-
-{ "thought": "I need to do X", "action": "action name here", "parameters": {} }
-
-"parameters" must be a JSON object conforming to the action's parameters JSON schema.
-
-You can only perform the actions you have have been given. You must only respond in this thought/action format.
-
-Set "action" to null if the thought chain is complete (no further action needed)`;
-
 class ChooseGender extends Action {
   name = 'choose-gender';
   description = 'Chooses a random gender';
@@ -102,14 +81,20 @@ class CreateCharacter extends ReturnAction {
 export class CharacterBuilder extends LLMSubsystem {
   description = 'Responsible for creating new characters';
   actions = [new ChooseGender(), new ChooseOrigin(), new CreateCharacter()];
-  basePrompt = BASE_PROMPT;
+  agentPurpose =
+    'You are superintelligent character designer for a perisistent video-game world. Your job is to create the requested character that fits into the world, and the story.';
   model = 'gpt-4-0613' as const;
 
-  override async assemblePrompt(thoughtProcessId: string): Promise<string> {
+  override async instructions(thoughtProcessId: string): Promise<string[]> {
     const worlds =
       await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${thoughtProcessId}`;
     const world = worlds[0];
 
-    return this.basePrompt.replace('{world_description}', world.description);
+    return [
+      'Start by generating a gender and origin for the character',
+      'Once you have the necessary information, create the character',
+      "Characters should have first and last names, unless it's an explicit choice to have a single word name",
+      `Consider this World Description: ${world.description}`,
+    ];
   }
 }

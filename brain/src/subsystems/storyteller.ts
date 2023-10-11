@@ -8,30 +8,6 @@ import { CharacterBuilder } from './characterBuilder';
 import { LocationBuilder } from './locationBuilder';
 import { MissionBuilder } from './missionBuilder';
 
-const BASE_PROMPT = `You are a superintelligent story designer for a perisistent video-game world. Your job is to design narratives that follow and extend parent narratives, and write a story that will be turned into a mission.
-
-- Dependencies such as characters must be created (or found via search) before they can be used in the story
-- It's important to always search to for an existing character that meets the story's needs before attempting to creating a new one
-- All characters included in the story must be explicitly created or identified before the story can be written
-- If you want to use a character you must add it to the story before using it
-- If you use an existing character from search, make sure the character actually matches your need. An apprentice marksman is not a skilled marksman, for example.
-- It's important that every character mentioned in the prompt is allocated to the story
-- You cannot re-use an already allocated character
-- Once you have the dependencies you need, write the story
-- After you write the story, create any locations mentioned in the story
-- If a mission story is requested for a player character, create a mission after the story is written
-
-You have access to a variety of actions to query and inspect the game state and world, as well as actions to create dependencies such as characters and write the final story:
-{actions}
-
-Based on the input, think about the next action to take. For example:
-
-{ "thought": "I need to do X", "action": "action name here", "parameters": {} }
-
-You can only perform the actions you have have been given. You must only respond in this thought/action format.
-
-Set "action" to null if the thought chain is complete (no further action needed)`;
-
 class CreateCharacter extends SignalAction {
   name = 'create-character';
   description = 'Create a character for use in the storyline, returns the name of the character';
@@ -216,9 +192,25 @@ export class Storyteller extends LLMSubsystem {
     new CreateLocation(),
     new CreateMission(),
   ];
-  basePrompt = BASE_PROMPT;
+  agentPurpose =
+    'You are a superintelligent story designer for a perisistent video-game world. Your job is to design narratives that follow and extend parent narratives, and write a story that will be turned into a mission.';
   model = 'gpt-4' as const;
   temperature = 0.1;
+
+  override async instructions(_thoughtProcessId: string): Promise<string[]> {
+    return [
+      'Dependencies such as characters must be created (or found via search) before they can be used in the story',
+      "It's important to always search to for an existing character that meets the story's needs before attempting to creating a new one",
+      'All characters included in the story must be explicitly created or identified before the story can be written',
+      'If you want to use a character you must add it to the story before using it',
+      'If you use an existing character from search, make sure the character actually matches your need. An apprentice marksman is not a skilled marksman, for example.',
+      "It's important that every character mentioned in the prompt is allocated to the story",
+      'You cannot re-use an already allocated character',
+      'Once you have the dependencies you need, write the story',
+      'After you write the story, create any locations mentioned in the story',
+      'If a mission story is requested for a player character, create a mission after the story is written',
+    ];
+  }
 
   override async prepareThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<void> {
     const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
