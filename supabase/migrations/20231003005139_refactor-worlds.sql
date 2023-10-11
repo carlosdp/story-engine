@@ -2,6 +2,8 @@ alter table worlds add column description text not null;
 alter table worlds drop column type;
 -- change profiles table, make is_staff default true (temporary)
 alter table profiles alter column is_staff set default true;
+-- change "active" column to default to true
+alter table worlds alter column active set default true;
 
 create table scenarios (
   id uuid primary key default gen_random_uuid(),

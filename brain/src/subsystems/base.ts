@@ -174,7 +174,7 @@ export abstract class LLMSubsystem extends Think {
   abstract basePrompt: string;
   abstract actions: Action[];
 
-  model: 'gpt-3.5-turbo' | 'gpt-4' = 'gpt-3.5-turbo';
+  model: 'gpt-3.5-turbo' | 'gpt-4' | 'gpt-4-0613' = 'gpt-3.5-turbo';
   temperature = 0.4;
 
   private cachedAvailableActions: Record<string, Action> | null = null;
@@ -359,15 +359,20 @@ export abstract class LLMSubsystem extends Think {
     return response;
   }
 
+  async assemblePrompt(_thoughtProcessId: string) {
+    return this.basePrompt;
+  }
+
   private async generateBaseMessage(thoughtProcessId: string) {
-    const basePrompt = this.basePrompt.replace(
+    const basePrompt = await this.assemblePrompt(thoughtProcessId);
+    const prompt = basePrompt.replace(
       '{actions}',
       Object.values(await this.availableActions(thoughtProcessId))
         .map(action => action.serializeDefinition())
         .join('\n')
     );
 
-    return { role: 'system', content: basePrompt };
+    return { role: 'system', content: prompt };
   }
 
   private async saveMessages(thoughtProcessId: string, messages: { role: string; content: string }[]) {

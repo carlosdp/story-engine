@@ -243,7 +243,7 @@ export abstract class SignalAction extends Action {
 export abstract class ReturnAction extends SignalAction {
   // @ts-ignore
   subsystem = { name: '' };
-  direction = 'in' as const;
+  direction = 'in' as 'in' | 'out';
 
   async responseToResult(_parameters: Record<string, unknown>, _response: any): Promise<string> {
     throw new Error('responseToResult should never be called for a ReturnAction');
@@ -269,6 +269,12 @@ export abstract class ReturnAction extends SignalAction {
     // @ts-ignore
     this.from_subsystem = { name: thoughtProcess.subsystem };
     this.subsystem = { name: initiatingMessage.from_subsystem };
+
+    if (!initiatingMessage.from_subsystem) {
+      // there was no initiating subsystem, this was initiated manually
+      this.subsystem = { name: 'ManualInitiator' };
+      this.direction = 'out';
+    }
 
     const result = super.execute(thoughtActionId, parameters, data);
 

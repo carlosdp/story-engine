@@ -25,7 +25,7 @@ export const CreateScenario = () => {
         description: data.description,
       });
 
-      navigate(`/worlds/${worldId}/scenarios/${newScenarioId}`);
+      navigate(`/scenarios/${newScenarioId}`);
     },
     [create, navigate, worldId]
   );

@@ -5,6 +5,7 @@ import { SubsystemMessage } from '../signal';
 import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
 import { CharacterBuilder } from './characterBuilder';
+import { LocationBuilder } from './locationBuilder';
 import { MissionBuilder } from './missionBuilder';
 
 const BASE_PROMPT = `You are a superintelligent story designer for a perisistent video-game world. Your job is to design narratives that follow and extend parent narratives, and write a story that will be turned into a mission.
@@ -17,6 +18,7 @@ const BASE_PROMPT = `You are a superintelligent story designer for a perisistent
 - It's important that every character mentioned in the prompt is allocated to the story
 - You cannot re-use an already allocated character
 - Once you have the dependencies you need, write the story
+- After you write the story, create any locations mentioned in the story
 - If a mission story is requested for a player character, create a mission after the story is written
 
 You have access to a variety of actions to query and inspect the game state and world, as well as actions to create dependencies such as characters and write the final story:
@@ -147,6 +149,29 @@ class WriteStory extends Action {
   }
 }
 
+class CreateLocation extends SignalAction {
+  name = 'create-location';
+  description = 'Create a location for use in the storyline, returns the name of the location';
+  parameters = {
+    description: { type: 'string', description: 'a description of the location' },
+    storyline_id: { type: 'string', description: 'the storyline ID to use as context for creating the location' },
+  };
+  from_subsystem = Storyteller;
+  subsystem = LocationBuilder;
+  direction = 'in' as const;
+
+  async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
+    const storyRes = await sql`select * from storyline_stories where storyline_id = ${parameters.storyline_id}`;
+    const story = storyRes[0].text;
+
+    return { command: `Create a location based on this description: ${parameters.description}`, story };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return `Created location: ${JSON.stringify(response)}`;
+  }
+}
+
 class CreateMission extends SignalAction {
   name = 'create-mission';
   description = 'Create a mission for a player character';
@@ -188,6 +213,7 @@ export class Storyteller extends LLMSubsystem {
     new SearchForCharacter(),
     new AddCharacterToStory(),
     new WriteStory(),
+    new CreateLocation(),
     new CreateMission(),
   ];
   basePrompt = BASE_PROMPT;

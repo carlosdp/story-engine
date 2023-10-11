@@ -11,7 +11,7 @@ const BASE_PROMPT = `You are superintelligent character designer for a perisiste
 - Once you have the necessary information, create the character
 - Characters should have first and last names, unless it's an explicit choice to have a single word name
 
-World Description: A small town in Europe called Castor Town, that looks quaint and traditional, but is actually a hotspot for people working on the beginnings of a new space race.
+World Description: {world_description}
 
 You have access to several actions to gather information about other characters, relationships, organizations, and stories, as well as actions to finally create the character:
 {actions}
@@ -19,6 +19,8 @@ You have access to several actions to gather information about other characters,
 Based on the input, think about the next action to take. For example:
 
 { "thought": "I need to do X", "action": "action name here", "parameters": {} }
+
+"parameters" must be a JSON object conforming to the action's parameters JSON schema.
 
 You can only perform the actions you have have been given. You must only respond in this thought/action format.
 
@@ -101,5 +103,13 @@ export class CharacterBuilder extends LLMSubsystem {
   description = 'Responsible for creating new characters';
   actions = [new ChooseGender(), new ChooseOrigin(), new CreateCharacter()];
   basePrompt = BASE_PROMPT;
-  model = 'gpt-4' as const;
+  model = 'gpt-4-0613' as const;
+
+  override async assemblePrompt(thoughtProcessId: string): Promise<string> {
+    const worlds =
+      await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${thoughtProcessId}`;
+    const world = worlds[0];
+
+    return this.basePrompt.replace('{world_description}', world.description);
+  }
 }
