@@ -13,6 +13,7 @@ class CreateCharacter extends SignalAction {
   description = 'Create a character for use in the storyline, returns the name of the character';
   parameters = {
     description: { type: 'string', description: 'a description of the character' },
+    id: { type: 'string', description: 'the id for the character, if explictly provided' },
   };
   from_subsystem = Storyteller;
   subsystem = CharacterBuilder;
@@ -66,15 +67,9 @@ class AddCharacterToStory extends Action {
 
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
     const thoughtProcessRes =
-      await sql`select thought_process_id from thought_process_actions where id = ${thoughtActionId}`;
-    const thoughtProcessId = thoughtProcessRes[0].thought_process_id;
-    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
-    if (storylines.length === 0) {
-      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
-      return { status: 'failed' };
-    }
-
-    const storylineId = storylines[0].id;
+      await sql`select tp.data from thought_processes tp left join thought_process_actions tpa on tp.id = tpa.thought_process_id where tpa.id = ${thoughtActionId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+    const storylineId = thoughtProcess.data.storylineId;
 
     try {
       await sql`insert into storyline_characters ${sql({
@@ -102,15 +97,9 @@ class WriteStory extends Action {
 
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
     const thoughtProcessRes =
-      await sql`select thought_process_id from thought_process_actions where id = ${thoughtActionId}`;
-    const thoughtProcessId = thoughtProcessRes[0].thought_process_id;
-    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
-    if (storylines.length === 0) {
-      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
-      return { status: 'failed' };
-    }
-
-    const storylineId = storylines[0].id;
+      await sql`select tp.data from thought_processes tp left join thought_process_actions tpa on tp.id = tpa.thought_process_id where tpa.id = ${thoughtActionId}`;
+    const thoughtProcess = thoughtProcessRes[0];
+    const storylineId = thoughtProcess.data.storylineId;
 
     await sql`insert into storyline_stories ${sql({
       storyline_id: storylineId,
@@ -130,14 +119,14 @@ class CreateLocation extends SignalAction {
   description = 'Create a location for use in the storyline, returns the name of the location';
   parameters = {
     description: { type: 'string', description: 'a description of the location' },
-    storyline_id: { type: 'string', description: 'the storyline ID to use as context for creating the location' },
+    storylineId: { type: 'string', description: 'the storyline ID to use as context for creating the location' },
   };
   from_subsystem = Storyteller;
   subsystem = LocationBuilder;
   direction = 'in' as const;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
-    const storyRes = await sql`select * from storyline_stories where storyline_id = ${parameters.storyline_id}`;
+    const storyRes = await sql`select * from storyline_stories where storyline_id = ${parameters.storylineId}`;
     const story = storyRes[0].text;
 
     return { command: `Create a location based on this description: ${parameters.description}`, story };
@@ -213,25 +202,35 @@ export class Storyteller extends LLMSubsystem {
   }
 
   override async prepareThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<void> {
-    const storylines = await sql`select id from storylines where storyteller_id = ${thoughtProcessId}`;
+    const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
+    const thoughtProcess = thoughtProcessRes[0];
 
-    if (storylines.length === 0) {
-      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
+    if (!thoughtProcess) {
+      throw new Error(`No thought process found for id ${thoughtProcessId}`);
+    }
 
-      const thoughtProcesses = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
-      const thoughtProcess = thoughtProcesses[0];
+    // todo: this all needs a refactor
+    if (!thoughtProcess.data.storylineId) {
+      if (message.payload.storylineId) {
+        await sql`update thought_processes set data = data || ${sql({
+          storylineId: message.payload.storylineId,
+        })} where id = ${thoughtProcessId}`;
 
-      if (!thoughtProcess) {
-        throw new Error(`No thought process found for id ${thoughtProcessId}`);
+        return;
       }
+
+      logger.error(`No storyline found for thought process ${thoughtProcessId}`);
 
       const storylinesRes = await sql`insert into storylines ${sql({
         world_id: thoughtProcess.world_id,
-        storyteller_id: thoughtProcessId,
         prompt: message.payload.prompt,
         scenario_id: message.payload.scenarioId ?? null,
       })} returning id`;
       const storylineId = storylinesRes[0].id;
+
+      await sql`update thought_processes set data = data || ${sql({
+        storylineId: message.payload.storylineId,
+      })} where id = ${thoughtProcessId}`;
 
       // associate player character with storyline
       if (message.payload.attachedCharacters) {

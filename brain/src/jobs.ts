@@ -25,3 +25,8 @@ export type StartCharacterJob = {
 export type CreateScenarioJob = {
   scenarioId: string;
 };
+
+export type CreateCharacterJob = {
+  storylineId: string;
+  characterId: string;
+};

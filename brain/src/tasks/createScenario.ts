@@ -29,11 +29,14 @@ export default async (job: Job<CreateScenarioJob>) => {
 
   const storylinesRes = await sql`insert into storylines ${sql({
     world_id: scenario.world_id,
-    storyteller_id: thoughtProcessId,
     prompt: storyPrompt,
     scenario_id: job.data.scenarioId,
   })} returning id`;
   const storylineId = storylinesRes[0].id;
+
+  await sql`update thought_processes set data = data || ${sql({
+    storylineId,
+  })} where id = ${thoughtProcessId}`;
 
   // associate player character with storyline
   // await sql`insert into storyline_characters ${sql({
