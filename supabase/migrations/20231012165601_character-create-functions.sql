@@ -9,6 +9,3 @@ begin
     return character_id;
 end;
 $$ language plpgsql;
-
-alter table thought_processes add column data jsonb not null default '{}';
-alter table storylines drop column storyteller_id;

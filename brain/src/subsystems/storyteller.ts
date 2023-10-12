@@ -17,7 +17,6 @@ class CreateCharacter extends SignalAction {
   };
   from_subsystem = Storyteller;
   subsystem = CharacterBuilder;
-  direction = 'in' as const;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
     return { command: `Create a character based on this description: ${parameters.description}` };
@@ -123,7 +122,6 @@ class CreateLocation extends SignalAction {
   };
   from_subsystem = Storyteller;
   subsystem = LocationBuilder;
-  direction = 'in' as const;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
     const storyRes = await sql`select * from storyline_stories where storyline_id = ${parameters.storylineId}`;
@@ -144,7 +142,6 @@ class CreateMission extends SignalAction {
     characterId: { type: 'string', description: 'the character id' },
     storylineId: { type: 'string', description: 'the storyline id' },
   };
-  direction = 'in' as const;
   from_subsystem = Storyteller;
   subsystem = MissionBuilder;
 

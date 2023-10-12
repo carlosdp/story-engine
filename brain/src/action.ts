@@ -66,7 +66,6 @@ export abstract class Action {
 
   protected async sendSignal(
     thoughtActionId: string,
-    direction: 'in' | 'out',
     subsystem: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     payload: any,
@@ -82,7 +81,6 @@ export abstract class Action {
 
     const messageRes = await sql`insert into signals ${sql({
       world_id: thoughtProcess.world_id,
-      direction,
       from_subsystem,
       from_action_id: thoughtActionId,
       subsystem,
@@ -99,7 +97,7 @@ export abstract class Action {
       return null;
     }
 
-    if (signal.response_to && signal.direction === 'in') {
+    if (signal.response_to) {
       // check if target thought process is terminated
       const responseToSignalRes = await sql`select * from signals where id = ${signal.response_to}`;
       const responseToSignal = responseToSignalRes[0];
@@ -121,8 +119,7 @@ export abstract class Action {
       }
     }
 
-    const messageRes =
-      await sql`select * from signals where direction = 'in' and response_to = ${messageId} and acknowledged_at is null`;
+    const messageRes = await sql`select * from signals where response_to = ${messageId} and acknowledged_at is null`;
     const message = messageRes[0];
 
     if (!message) {
@@ -168,7 +165,6 @@ export abstract class Action {
     if (!data.resourceConsumptionMessageId) {
       const messageId = await this.sendSignal(
         thoughtActionId,
-        'out',
         'logistics',
         { action: 'consume-resources', resources },
         'logistics'
@@ -195,7 +191,6 @@ export type SignalActionPayload = any;
 export abstract class SignalAction extends Action {
   from_subsystem: (new () => Thinker) | null = null;
   abstract subsystem: new () => Thinker;
-  abstract direction: 'in' | 'out';
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   abstract payload(worldId: string, parameters: Record<string, unknown>): Promise<SignalActionPayload>;
@@ -214,13 +209,7 @@ export abstract class SignalAction extends Action {
 
     if (!data?.messageId) {
       const payload = await this.payload(thoughtProcess.world_id, parameters);
-      const messageId = await this.sendSignal(
-        thoughtActionId,
-        this.direction,
-        this.subsystem.name,
-        payload,
-        this.from_subsystem?.name
-      );
+      const messageId = await this.sendSignal(thoughtActionId, this.subsystem.name, payload, this.from_subsystem?.name);
       return { status: 'waiting', data: { messageId } };
     } else {
       const response = await this.getSignalResponse(data.messageId);
@@ -243,7 +232,6 @@ export abstract class SignalAction extends Action {
 export abstract class ReturnAction extends SignalAction {
   // @ts-ignore
   subsystem = { name: '' };
-  direction = 'in' as 'in' | 'out';
 
   async responseToResult(_parameters: Record<string, unknown>, _response: any): Promise<string> {
     throw new Error('responseToResult should never be called for a ReturnAction');
@@ -273,7 +261,6 @@ export abstract class ReturnAction extends SignalAction {
     if (!initiatingMessage.from_subsystem) {
       // there was no initiating subsystem, this was initiated manually
       this.subsystem = { name: 'ManualInitiator' };
-      this.direction = 'out';
     }
 
     const result = super.execute(thoughtActionId, parameters, data);

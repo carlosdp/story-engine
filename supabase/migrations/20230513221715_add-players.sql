@@ -14,7 +14,7 @@ create or replace function get_player_by_name(player_world_id uuid, player_name 
     select * into player from players where players.name = player_name and players.world_id = player_world_id;
     if not found then
       insert into players (world_id, name) values (player_world_id, player_name) returning * into player;
-      insert into signals (world_id, subsystem, direction, payload) values (player_world_id, 'playerStarter', 'in', json_build_object('playerId', player.id, 'command', 'Create a character and starter mission for this player'));
+      insert into signals (world_id, subsystem, payload) values (player_world_id, 'playerStarter', json_build_object('playerId', player.id, 'command', 'Create a character and starter mission for this player'));
     end if;
     return player;
   end;

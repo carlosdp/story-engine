@@ -55,7 +55,6 @@ export class Think {
               left join thought_processes on thought_process_actions.thought_process_id = thought_processes.id
               where thought_process_actions.thought_process_id = ${existingChild.id}
               and thought_processes.terminated_at is null
-              and signals.direction = 'in'
               and signals.from_subsystem = ${signal.subsystem}
               and signals.subsystem = ${signal.from_subsystem}
               and signals.id not in (
@@ -77,7 +76,6 @@ export class Think {
             select signals.* from signals
             left join thought_process_actions on signals.from_action_id = thought_process_actions.id
             where thought_process_actions.thought_process_id = ${parentThoughtProcessId}
-            and signals.direction = 'in'
             and signals.from_subsystem = ${signal.subsystem}
             and signals.subsystem = ${signal.from_subsystem}
             and signals.id not in (
@@ -223,7 +221,6 @@ export abstract class LLMSubsystem extends Think {
   async createSignal(worldId: string, payload: SignalActionPayload): Promise<SubsystemMessage> {
     const signals = await sql`insert into signals ${sql({
       world_id: worldId,
-      direction: 'in',
       subsystem: this.name,
       payload,
     })} returning *`;
@@ -465,7 +462,6 @@ export abstract class DeterministicSubsystem extends Think {
       world_id: thoughtProcess.world_id,
       type: 'signal',
       response_to: initiatingSignal.id,
-      direction: initiatingSignal.from_subsystem ? 'in' : 'out',
       subsystem: initiatingSignal.from_subsystem ?? this.name,
       from_subsystem: this.name,
       payload: initiatingSignal.from_subsystem ? result : JSON.parse(result),

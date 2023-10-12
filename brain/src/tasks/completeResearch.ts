@@ -19,7 +19,6 @@ export default async (job: Job) => {
     await sql`insert into signals ${sql({
       world_id: completedResearch.world_id,
       type: 'signal',
-      direction: 'in',
       subsystem: 'overlord',
       payload: { message: `Research on "${completedResearch.description}" completed. Choose new research` },
     })}`;

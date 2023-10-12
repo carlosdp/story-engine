@@ -7,7 +7,7 @@ export default async () => {
   logger.debug('Checking for signals');
 
   const signals =
-    await sql`select signals.* from signals inner join worlds on signals.world_id = worlds.id where direction = 'in' and acknowledged_at is null and response_to is null and worlds.active = true`;
+    await sql`select signals.* from signals inner join worlds on signals.world_id = worlds.id where acknowledged_at is null and response_to is null and worlds.active = true`;
 
   await Think.processSignals(subsystems, signals);
 

@@ -272,6 +272,38 @@ export interface Database {
           state?: Database["public"]["Enums"]["job_state"]
         }
       }
+      locations: {
+        Row: {
+          backstory: string | null
+          created_at: string
+          description: string | null
+          embedding: unknown
+          id: string
+          location: unknown | null
+          name: string
+          world_id: string
+        }
+        Insert: {
+          backstory?: string | null
+          created_at?: string
+          description?: string | null
+          embedding: unknown
+          id?: string
+          location?: unknown | null
+          name: string
+          world_id: string
+        }
+        Update: {
+          backstory?: string | null
+          created_at?: string
+          description?: string | null
+          embedding?: unknown
+          id?: string
+          location?: unknown | null
+          name?: string
+          world_id?: string
+        }
+      }
       mission_characters: {
         Row: {
           character_id: string
@@ -539,7 +571,6 @@ export interface Database {
         Row: {
           acknowledged_at: string | null
           created_at: string
-          direction: Database["public"]["Enums"]["direction"]
           from_action_id: string | null
           from_subsystem: string | null
           id: string
@@ -551,7 +582,6 @@ export interface Database {
         Insert: {
           acknowledged_at?: string | null
           created_at?: string
-          direction: Database["public"]["Enums"]["direction"]
           from_action_id?: string | null
           from_subsystem?: string | null
           id?: string
@@ -563,7 +593,6 @@ export interface Database {
         Update: {
           acknowledged_at?: string | null
           created_at?: string
-          direction?: Database["public"]["Enums"]["direction"]
           from_action_id?: string | null
           from_subsystem?: string | null
           id?: string
@@ -617,7 +646,6 @@ export interface Database {
           name: string | null
           prompt: string
           scenario_id: string | null
-          storyteller_id: string
           updated_at: string
           world_id: string
         }
@@ -627,7 +655,6 @@ export interface Database {
           name?: string | null
           prompt: string
           scenario_id?: string | null
-          storyteller_id: string
           updated_at?: string
           world_id: string
         }
@@ -637,7 +664,6 @@ export interface Database {
           name?: string | null
           prompt?: string
           scenario_id?: string | null
-          storyteller_id?: string
           updated_at?: string
           world_id?: string
         }
@@ -726,6 +752,7 @@ export interface Database {
       thought_processes: {
         Row: {
           created_at: string
+          data: Json
           id: string
           initiating_message_id: string
           parent_thought_process_id: string | null
@@ -736,6 +763,7 @@ export interface Database {
         }
         Insert: {
           created_at?: string
+          data?: Json
           id?: string
           initiating_message_id: string
           parent_thought_process_id?: string | null
@@ -746,6 +774,7 @@ export interface Database {
         }
         Update: {
           created_at?: string
+          data?: Json
           id?: string
           initiating_message_id?: string
           parent_thought_process_id?: string | null
@@ -873,7 +902,6 @@ export interface Database {
         Row: {
           acknowledged_at: string | null
           created_at: string | null
-          direction: Database["public"]["Enums"]["direction"] | null
           from_action_id: string | null
           from_subsystem: string | null
           id: string | null
@@ -885,7 +913,6 @@ export interface Database {
         Insert: {
           acknowledged_at?: string | null
           created_at?: string | null
-          direction?: Database["public"]["Enums"]["direction"] | null
           from_action_id?: string | null
           from_subsystem?: string | null
           id?: string | null
@@ -897,7 +924,6 @@ export interface Database {
         Update: {
           acknowledged_at?: string | null
           created_at?: string | null
-          direction?: Database["public"]["Enums"]["direction"] | null
           from_action_id?: string | null
           from_subsystem?: string | null
           id?: string | null
@@ -983,6 +1009,12 @@ export interface Database {
           updated_at: string
         }
       }
+      createcharacter: {
+        Args: {
+          storyline_id: string
+        }
+        Returns: string
+      }
       get_player_by_name: {
         Args: {
           player_world_id: string
@@ -1056,7 +1088,6 @@ export interface Database {
     }
     Enums: {
       action_status: "pending" | "waiting" | "complete" | "failed"
-      direction: "in" | "out"
       job_state:
         | "created"
         | "retry"

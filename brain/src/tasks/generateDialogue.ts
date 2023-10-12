@@ -76,7 +76,6 @@ export default async (job: Job<GenerateLetterJob>) => {
   await sql`insert into signals ${sql({
     world_id: job.data.worldId,
     subsystem: 'humanResources',
-    direction: 'out',
     type: 'command',
     payload: {
       action: 'add-dialogue',

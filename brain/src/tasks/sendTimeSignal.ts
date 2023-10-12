@@ -23,7 +23,6 @@ export default async (job: Job<TimeSignalJob>) => {
     await sql`insert into signals ${sql({
       world_id: worldId,
       type: 'signal',
-      direction: 'in',
       subsystem: 'overlord',
       payload: { time: new Date() },
     })}`;

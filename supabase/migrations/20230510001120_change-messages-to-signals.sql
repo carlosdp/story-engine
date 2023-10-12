@@ -2,6 +2,7 @@ drop view queued_messages;
 drop function acknowledge_messages(uuid[]);
 drop table messages;
 drop type message_type;
+drop type direction;
 
 
 create table signals (
@@ -9,7 +10,6 @@ create table signals (
   world_id uuid not null references worlds(id),
   response_to uuid references signals(id),
   from_action_id uuid references thought_process_actions(id),
-  direction direction not null,
   subsystem varchar not null,
   from_subsystem varchar,
   payload jsonb not null,
