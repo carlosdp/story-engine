@@ -2,6 +2,7 @@ import { Action, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import logger from '../logging';
 import { SubsystemMessage } from '../signal';
+import type { Database } from '../supabaseTypes';
 import { rawMessage } from '../utils';
 
 export type ActionCommand = {
@@ -185,12 +186,13 @@ export abstract class LLMSubsystem extends Think {
   abstract actions: Action[];
   abstract agentPurpose: string;
 
-  abstract instructions(_thoughtProcessId: string): Promise<string[]>;
+  abstract instructions(): Promise<string[]>;
 
   model: 'gpt-3.5-turbo' | 'gpt-4' | 'gpt-4-0613' = 'gpt-3.5-turbo';
   temperature = 0.4;
 
   private cachedAvailableActions: Record<string, Action> | null = null;
+  protected thoughtProcess!: Database['public']['Tables']['thought_processes']['Row'];
 
   get name() {
     return typeof this.constructor.name === 'string' ? this.constructor.name : 'Unknown';
@@ -200,12 +202,16 @@ export abstract class LLMSubsystem extends Think {
     return this.actions.find(action => action.name === name);
   }
 
-  async availableActions(thoughtProcessId: string) {
+  async availableActions() {
     if (!this.cachedAvailableActions) {
+      if (!this.thoughtProcess) {
+        throw new Error('No thought process');
+      }
+
       // call async isAvailable for all actions
       const availableActions = await Promise.all(
         this.actions.map(async action => {
-          const isAvailable = await action.isAvailable(thoughtProcessId);
+          const isAvailable = await action.isAvailable(this.thoughtProcess.id);
           return isAvailable ? action : null;
         })
       );
@@ -259,7 +265,10 @@ export abstract class LLMSubsystem extends Think {
 
     await this.prepareThoughtProcess(thoughtProcessId, message);
 
-    const response = await this.processMessages(thoughtProcessId, messages);
+    const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
+    this.thoughtProcess = thoughtProcessRes[0] as typeof this.thoughtProcess;
+
+    const response = await this.processMessages(messages);
 
     messages.push(response);
 
@@ -273,7 +282,10 @@ export abstract class LLMSubsystem extends Think {
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
     ];
 
-    const response = await this.processMessages(thoughtProcessId, messages);
+    const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
+    this.thoughtProcess = thoughtProcessRes[0] as typeof this.thoughtProcess;
+
+    const response = await this.processMessages(messages);
 
     messages.push(response);
 
@@ -290,7 +302,10 @@ export abstract class LLMSubsystem extends Think {
 
     const messages = [{ role: 'user', content: completedAction.result }];
 
-    const response = await this.processMessages(thoughtProcessId, [...previousMessages, ...messages]);
+    const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
+    this.thoughtProcess = thoughtProcessRes[0] as typeof this.thoughtProcess;
+
+    const response = await this.processMessages([...previousMessages, ...messages]);
 
     messages.push(response);
 
@@ -299,12 +314,16 @@ export abstract class LLMSubsystem extends Think {
     return thoughtProcessId;
   }
 
-  async processMessages(thoughtProcessId: string, messages: { role: string; content: string }[]) {
+  async processMessages(messages: { role: string; content: string }[]) {
     let attemptsLeft = 3;
     const debugMessages: { role: string; content: string }[] = [];
     let response: { role: string; content: string } = { role: 'system', content: 'No response' };
 
-    const baseMessage = await this.generateBaseMessage(thoughtProcessId);
+    if (!this.thoughtProcess) {
+      throw new Error('No thought process');
+    }
+
+    const baseMessage = await this.generateBaseMessage();
 
     while (attemptsLeft > 0) {
       response = await rawMessage(
@@ -334,7 +353,7 @@ export abstract class LLMSubsystem extends Think {
         return response;
       }
 
-      const availableActions = await this.availableActions(thoughtProcessId);
+      const availableActions = await this.availableActions();
       const action = availableActions[actionCommand.action];
 
       if (!action) {
@@ -363,7 +382,7 @@ export abstract class LLMSubsystem extends Think {
         continue;
       }
 
-      await action.queue(thoughtProcessId, actionCommand.parameters);
+      await action.queue(this.thoughtProcess.id, actionCommand.parameters);
 
       break;
     }
@@ -371,11 +390,11 @@ export abstract class LLMSubsystem extends Think {
     return response;
   }
 
-  private async generateBaseMessage(thoughtProcessId: string) {
-    const instructions = await this.instructions(thoughtProcessId);
+  private async generateBaseMessage() {
+    const instructions = await this.instructions();
     const actionsInstruction = ACTION_INSTRUCTIONS.replace(
       '{actions}',
-      Object.values(await this.availableActions(thoughtProcessId))
+      Object.values(await this.availableActions())
         .map(action => action.serializeDefinition())
         .join('\n')
     );

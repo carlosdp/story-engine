@@ -13,6 +13,7 @@
     "preview": "vite preview",
     "lint": "eslint --max-warnings 0 \"**/*.{ts,tsx,js,jsx}\"",
     "fix": "eslint --max-warnings 0 --fix \"**/*.{ts,tsx,js,jsx}\"",
+    "types": "supabase gen types typescript --local | tee {brain/,}src/supabaseTypes.d.ts > /dev/null",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "coverage": "vitest run --coverage"

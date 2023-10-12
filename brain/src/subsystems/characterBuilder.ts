@@ -85,9 +85,9 @@ export class CharacterBuilder extends LLMSubsystem {
     'You are superintelligent character designer for a perisistent video-game world. Your job is to create the requested character that fits into the world, and the story.';
   model = 'gpt-4-0613' as const;
 
-  override async instructions(thoughtProcessId: string): Promise<string[]> {
+  override async instructions(): Promise<string[]> {
     const worlds =
-      await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${thoughtProcessId}`;
+      await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${this.thoughtProcess.id}`;
     const world = worlds[0];
 
     return [
