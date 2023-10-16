@@ -61,3 +61,27 @@ export class CooldownGate extends ActionGate {
     return now.getTime() - lastActionDate.getTime() < this.cooldown * 1000;
   }
 }
+
+export class StoryAvailableGate extends ActionGate {
+  name = 'story-available';
+  description = 'Checks there is a story written attached to the thought process';
+
+  constructor() {
+    super();
+  }
+
+  async check(_worldId: string, thoughtProcessActionId: string): Promise<boolean> {
+    const thoughtProcessRes =
+      await sql`select tp.* from thought_processes tp left join thought_process_actions tpa on tpa.thought_process_id = tp.id where tpa.id = ${thoughtProcessActionId} limit 1`;
+    const thoughtProcess = thoughtProcessRes[0];
+
+    if (!thoughtProcess || !thoughtProcess.data?.storylineId) {
+      return false;
+    }
+
+    const storyRes =
+      await sql`select count(id) from storyline_stories where storyline_id = ${thoughtProcess.data.storylineId}`;
+
+    return storyRes[0].count > 0;
+  }
+}

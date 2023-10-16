@@ -1,4 +1,4 @@
-import { Action, SignalActionPayload } from '../action';
+import { Action, ActionConstructor, SignalActionPayload } from '../action';
 import { sql } from '../db';
 import logger from '../logging';
 import { SubsystemMessage } from '../signal';
@@ -15,6 +15,7 @@ export abstract class Thinker {
   abstract processSignal(message: SubsystemMessage): Promise<string>;
   abstract continueProcessing(thoughtProcessId: string, completedActionId: string): Promise<string>;
   abstract getAction(name: string): Action | undefined;
+  abstract attachThoughtProcess(thoughtProcess: Database['public']['Tables']['thought_processes']['Row']): void;
 }
 
 type ThinkerConstructor = new () => Thinker;
@@ -126,6 +127,9 @@ export class Think {
 
       const subsystem = subsystems[thoughtProcess.subsystem as keyof typeof subsystems];
       const subsystemInstance = new subsystem();
+      subsystemInstance.attachThoughtProcess(
+        thoughtProcess as Database['public']['Tables']['thought_processes']['Row']
+      );
 
       const action = subsystemInstance.getAction(processAction.action);
 
@@ -183,7 +187,7 @@ You can only perform the actions you have have been given. You must only respond
 Set "action" to null if the thought chain is complete (no further action needed)`;
 
 export abstract class LLMSubsystem extends Think {
-  abstract actions: Action[];
+  abstract actions: ActionConstructor[];
   abstract agentPurpose: string;
 
   abstract instructions(): Promise<string[]>;
@@ -191,37 +195,40 @@ export abstract class LLMSubsystem extends Think {
   model: 'gpt-3.5-turbo' | 'gpt-4' | 'gpt-4-0613' = 'gpt-3.5-turbo';
   temperature = 0.4;
 
-  private cachedAvailableActions: Record<string, Action> | null = null;
-  protected thoughtProcess!: Database['public']['Tables']['thought_processes']['Row'];
+  protected thoughtProcess!: Database['public']['Tables']['thought_processes']['Row'] & { data: any };
 
   get name() {
     return typeof this.constructor.name === 'string' ? this.constructor.name : 'Unknown';
   }
 
   getAction(name: string) {
-    return this.actions.find(action => action.name === name);
+    this.assertThoughtProcess();
+
+    const foundAction = this.actions.find(action => action.name === name);
+    if (foundAction) {
+      return new foundAction(this.thoughtProcess);
+    }
   }
 
   async availableActions() {
-    if (!this.cachedAvailableActions) {
-      if (!this.thoughtProcess) {
-        throw new Error('No thought process');
-      }
+    this.assertThoughtProcess();
 
-      // call async isAvailable for all actions
-      const availableActions = await Promise.all(
-        this.actions.map(async action => {
-          const isAvailable = await action.isAvailable(this.thoughtProcess.id);
-          return isAvailable ? action : null;
-        })
-      );
-
-      this.cachedAvailableActions = Object.fromEntries(
-        availableActions.filter(action => action !== null).map(action => [action!.name, action!])
-      );
+    if (!this.thoughtProcess) {
+      throw new Error('No thought process');
     }
 
-    return this.cachedAvailableActions;
+    // call async isAvailable for all actions
+    const availableActions = await Promise.all(
+      this.actions.map(async action => {
+        const initializedAction = new action(this.thoughtProcess);
+        const isAvailable = await initializedAction.isAvailable();
+        return isAvailable ? initializedAction : null;
+      })
+    );
+
+    return Object.fromEntries(
+      availableActions.filter(action => action !== null).map(action => [action!.name, action!])
+    );
   }
 
   async createSignal(worldId: string, payload: SignalActionPayload): Promise<SubsystemMessage> {
@@ -243,6 +250,16 @@ export abstract class LLMSubsystem extends Think {
     })} returning id`;
 
     return thoughtProcessRes[0].id;
+  }
+
+  attachThoughtProcess(thoughtProcess: Database['public']['Tables']['thought_processes']['Row']) {
+    this.thoughtProcess = thoughtProcess;
+  }
+
+  assertThoughtProcess() {
+    if (!this.thoughtProcess) {
+      throw new Error('No thought process attached to thinker');
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -382,7 +399,7 @@ export abstract class LLMSubsystem extends Think {
         continue;
       }
 
-      await action.queue(this.thoughtProcess.id, actionCommand.parameters);
+      await action.queue(actionCommand.parameters);
 
       break;
     }
@@ -428,6 +445,10 @@ export abstract class DeterministicSubsystem extends Think {
     return this.actions.find(action => action.name === name);
   }
 
+  attachThoughtProcess(_thoughtProcess: Database['public']['Tables']['thought_processes']['Row']) {
+    return;
+  }
+
   async processSignal(message: SubsystemMessage) {
     let parentThoughtProcessId: string | null = null;
 
@@ -460,7 +481,7 @@ export abstract class DeterministicSubsystem extends Think {
       return thoughtProcessId;
     }
 
-    await action.queue(thoughtProcessId, actionCommand);
+    await action.queue(actionCommand);
 
     return thoughtProcessId;
   }

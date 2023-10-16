@@ -1,5 +1,6 @@
 import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
 import { sql } from '../db';
+import { StoryAvailableGate } from '../gate';
 import logger from '../logging';
 import { SubsystemMessage } from '../signal';
 import { embedding } from '../utils';
@@ -9,11 +10,10 @@ import { LocationBuilder } from './locationBuilder';
 import { MissionBuilder } from './missionBuilder';
 
 class CreateCharacter extends SignalAction {
-  name = 'create-character';
   description = 'Create a character for use in the storyline, returns the name of the character';
   parameters = {
-    description: { type: 'string', description: 'a description of the character' },
-    id: { type: 'string', description: 'the id for the character, if explictly provided' },
+    description: { type: 'string', description: 'a description of the individual character that is needed' },
+    id: { type: 'string', description: 'the id for the character, if explictly provided, optional' },
   };
   from_subsystem = Storyteller;
   subsystem = CharacterBuilder;
@@ -28,7 +28,6 @@ class CreateCharacter extends SignalAction {
 }
 
 class SearchForCharacter extends Action {
-  name = 'search-character';
   description = 'Search for an existing character to use as part of the storyline';
   parameters = {
     query: {
@@ -58,7 +57,6 @@ class SearchForCharacter extends Action {
 }
 
 class AddCharacterToStory extends Action {
-  name = 'add-character';
   description = 'Add a character to the story';
   parameters = {
     id: { type: 'string', description: 'the character id' },
@@ -88,7 +86,6 @@ class AddCharacterToStory extends Action {
 }
 
 class WriteStory extends Action {
-  name = 'write-story';
   description = 'Write the story for this storyline';
   parameters = {
     text: { type: 'string', description: 'the text of the story, can span multiple paragraphs' },
@@ -114,17 +111,18 @@ class WriteStory extends Action {
 }
 
 class CreateLocation extends SignalAction {
-  name = 'create-location';
   description = 'Create a location for use in the storyline, returns the name of the location';
   parameters = {
     description: { type: 'string', description: 'a description of the location' },
     storylineId: { type: 'string', description: 'the storyline ID to use as context for creating the location' },
   };
+  gates = [new StoryAvailableGate()];
   from_subsystem = Storyteller;
   subsystem = LocationBuilder;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
-    const storyRes = await sql`select * from storyline_stories where storyline_id = ${parameters.storylineId}`;
+    const storyRes =
+      await sql`select * from storyline_stories where storyline_id = ${this.thoughtProcess.data.storylineId}`;
     const story = storyRes[0].text;
 
     return { command: `Create a location based on this description: ${parameters.description}`, story };
@@ -136,7 +134,6 @@ class CreateLocation extends SignalAction {
 }
 
 class CreateMission extends SignalAction {
-  name = 'create-mission';
   description = 'Create a mission for a player character';
   parameters = {
     characterId: { type: 'string', description: 'the character id' },
@@ -170,20 +167,13 @@ class CreateMission extends SignalAction {
 
 export class Storyteller extends LLMSubsystem {
   description = 'Responsible for managing storylines';
-  actions = [
-    new CreateCharacter(),
-    new SearchForCharacter(),
-    new AddCharacterToStory(),
-    new WriteStory(),
-    new CreateLocation(),
-    new CreateMission(),
-  ];
+  actions = [CreateCharacter, SearchForCharacter, AddCharacterToStory, WriteStory, CreateLocation, CreateMission];
   agentPurpose =
     'You are a superintelligent story designer for a perisistent video-game world. Your job is to design narratives that follow and extend parent narratives, and write a story that will be turned into a mission.';
   model = 'gpt-4' as const;
   temperature = 0.1;
 
-  override async instructions(_thoughtProcessId: string): Promise<string[]> {
+  override async instructions(): Promise<string[]> {
     return [
       'Dependencies such as characters must be created (or found via search) before they can be used in the story',
       "It's important to always search to for an existing character that meets the story's needs before attempting to creating a new one",
@@ -209,8 +199,14 @@ export class Storyteller extends LLMSubsystem {
     // todo: this all needs a refactor
     if (!thoughtProcess.data.storylineId) {
       if (message.payload.storylineId) {
-        await sql`update thought_processes set data = data || ${sql({
-          storylineId: message.payload.storylineId,
+        const data = thoughtProcess.data || {};
+        data.storylineId = message.payload.storylineId;
+
+        await sql`update thought_processes set ${sql({
+          data: {
+            ...thoughtProcess.data,
+            storylineId: message.payload.storylineId,
+          },
         })} where id = ${thoughtProcessId}`;
 
         return;
@@ -220,13 +216,16 @@ export class Storyteller extends LLMSubsystem {
 
       const storylinesRes = await sql`insert into storylines ${sql({
         world_id: thoughtProcess.world_id,
-        prompt: message.payload.prompt,
+        prompt: message.payload.command,
         scenario_id: message.payload.scenarioId ?? null,
       })} returning id`;
       const storylineId = storylinesRes[0].id;
 
-      await sql`update thought_processes set data = data || ${sql({
-        storylineId: message.payload.storylineId,
+      await sql`update thought_processes set ${sql({
+        data: {
+          ...thoughtProcess.data,
+          storylineId,
+        },
       })} where id = ${thoughtProcessId}`;
 
       // associate player character with storyline

@@ -3,7 +3,6 @@ import { sql } from '../db';
 import { LLMSubsystem } from './base';
 
 class MissionGraph extends Action {
-  name = 'mission-graph';
   description = 'Define a mission graph for a player or NPC character';
   parameters = {
     storylineId: { type: 'string', description: 'The id of the storyline' },
@@ -76,13 +75,13 @@ class MissionGraph extends Action {
 
 export class MissionBuilder extends LLMSubsystem {
   description = 'Responsible for managing missions';
-  actions = [new MissionGraph()];
+  actions = [MissionGraph];
   agentPurpose =
     'You are superintelligent mission designer for a perisistent video-game world. Your job is to take a given storyline, and generate a Mission Graph that will be used by a game engine to implement the story in the game world.';
   model = 'gpt-4' as const;
   temperature = 0;
 
-  override async instructions(_thoughtProcessId: string): Promise<string[]> {
+  override async instructions(): Promise<string[]> {
     return [
       'You can make one or more Mission Graphs, which can be assigned to player characters',
       'Objective data match one of the provided objective type data schemas',

@@ -5,7 +5,6 @@ import { embedding } from '../utils';
 import { LLMSubsystem } from './base';
 
 class SelfReflection extends Action {
-  name = 'self-reflection';
   description = 'Reflect on a thought or idea to inform later action decisions';
   parameters = {
     idea: { type: 'string', description: 'the idea or thought' },
@@ -21,7 +20,6 @@ class SelfReflection extends Action {
 }
 
 class CreateLocation extends ReturnAction {
-  name = 'create-location';
   description = 'Create the final location';
   parameters = {
     name: { type: 'string', description: 'the location name' },
@@ -57,14 +55,14 @@ class CreateLocation extends ReturnAction {
 
 export class LocationBuilder extends LLMSubsystem {
   description = 'Responsible for creating new world locations';
-  actions = [new SelfReflection(), new CreateLocation()];
+  actions = [SelfReflection, CreateLocation];
   agentPurpose =
     'You are superintelligent world designer for a perisistent video-game world. Your job is to create the requested location(s) that fits into the world, and the story.';
   model = 'gpt-4-0613' as const;
 
-  override async instructions(thoughtProcessId: string): Promise<string[]> {
+  override async instructions(): Promise<string[]> {
     const worlds =
-      await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${thoughtProcessId}`;
+      await sql`select worlds.* from worlds left join thought_processes on worlds.id = thought_processes.world_id where thought_processes.id = ${this.thoughtProcess.world_id}`;
     const world = worlds[0];
 
     return [

@@ -6,7 +6,6 @@ import { LLMSubsystem } from './base';
 import { getRandomCountry } from './countries';
 
 class ChooseGender extends Action {
-  name = 'choose-gender';
   description = 'Chooses a random gender';
   parameters = {};
 
@@ -22,7 +21,6 @@ class ChooseGender extends Action {
 }
 
 class ChooseOrigin extends Action {
-  name = 'choose-origin';
   description = 'Chooses a country origin';
   parameters = {};
 
@@ -38,7 +36,6 @@ class ChooseOrigin extends Action {
 }
 
 class CreateCharacter extends ReturnAction {
-  name = 'create-character';
   description = 'Create the final character';
   parameters = {
     name: { type: 'string', description: "the character's name" },
@@ -80,7 +77,7 @@ class CreateCharacter extends ReturnAction {
 
 export class CharacterBuilder extends LLMSubsystem {
   description = 'Responsible for creating new characters';
-  actions = [new ChooseGender(), new ChooseOrigin(), new CreateCharacter()];
+  actions = [ChooseGender, ChooseOrigin, CreateCharacter];
   agentPurpose =
     'You are superintelligent character designer for a perisistent video-game world. Your job is to create the requested character that fits into the world, and the story.';
   model = 'gpt-4-0613' as const;

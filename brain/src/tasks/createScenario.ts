@@ -34,8 +34,8 @@ export default async (job: Job<CreateScenarioJob>) => {
   })} returning id`;
   const storylineId = storylinesRes[0].id;
 
-  await sql`update thought_processes set data = data || ${sql({
-    storylineId,
+  await sql`update thought_processes set ${sql({
+    data: { storylineId },
   })} where id = ${thoughtProcessId}`;
 
   // associate player character with storyline

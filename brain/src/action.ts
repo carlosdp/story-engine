@@ -3,6 +3,7 @@ import { validate } from 'jsonschema';
 import { sql } from './db';
 import { ActionGate } from './gate';
 import type { Thinker } from './subsystems/base';
+import { Database } from './supabaseTypes';
 import { embedding } from './utils';
 
 export type Observation = {
@@ -16,17 +17,28 @@ export type ActionResult = { status: 'failed' } | { status: 'waiting' | 'complet
 
 export type RustResources = { wood?: number; stone?: number; metal?: number; sulfur?: number; hqm?: number };
 
+export type ActionConstructor = new (thoughtProcess: Action['thoughtProcess']) => Action;
+
 export abstract class Action {
-  abstract name: string;
   abstract description: string;
   abstract parameters: Record<string, any>;
 
+  protected thoughtProcess: Database['public']['Tables']['thought_processes']['Row'] & { data: any };
+
   gates: ActionGate[] = [];
 
+  constructor(thoughtProcess: Database['public']['Tables']['thought_processes']['Row']) {
+    this.thoughtProcess = thoughtProcess;
+  }
+
+  get name(): string {
+    return this.constructor.name;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async queue(thoughtProcessId: string, parameters: any) {
+  async queue(parameters: any) {
     await sql`insert into thought_process_actions ${sql({
-      thought_process_id: thoughtProcessId,
+      thought_process_id: this.thoughtProcess.id,
       action: this.name,
       parameters,
     })}`;
@@ -47,15 +59,10 @@ export abstract class Action {
     return validate(parameters, schema, { required: true });
   }
 
-  async isAvailable(thoughtProcessId: string): Promise<boolean> {
-    const thoughtProcessRes = await sql`select world_id from thought_processes where id = ${thoughtProcessId}`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    if (!thoughtProcess) {
-      throw new Error(`Thought process ${thoughtProcessId} not found`);
-    }
-
-    const checks = await Promise.all(this.gates.map(gate => gate.check(thoughtProcess.world_id, thoughtProcessId)));
+  async isAvailable(): Promise<boolean> {
+    const checks = await Promise.all(
+      this.gates.map(gate => gate.check(this.thoughtProcess.world_id, this.thoughtProcess.id))
+    );
 
     return !checks.some(x => !x);
   }
@@ -71,16 +78,8 @@ export abstract class Action {
     payload: any,
     from_subsystem: string | null = null
   ) {
-    const thoughtProcessRes =
-      await sql`select world_id from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId}`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    if (!thoughtProcess) {
-      throw new Error(`Thought process not found for action ${thoughtActionId}`);
-    }
-
     const messageRes = await sql`insert into signals ${sql({
-      world_id: thoughtProcess.world_id,
+      world_id: this.thoughtProcess.world_id,
       from_subsystem,
       from_action_id: thoughtActionId,
       subsystem,
@@ -132,19 +131,11 @@ export abstract class Action {
   }
 
   protected async saveObservation(thoughtActionId: string, observation: Observation) {
-    const thoughtProcessRes =
-      await sql`select world_id from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId}`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    if (!thoughtProcess) {
-      throw new Error(`Thought process not found for action ${thoughtActionId}`);
-    }
-
     const embed = await embedding(observation.text);
 
     const rows = await sql`
       insert into observations ${sql({
-        world_id: thoughtProcess.world_id,
+        world_id: this.thoughtProcess.world_id,
         ...observation,
         embedding: JSON.stringify(embed),
         location:
@@ -199,16 +190,8 @@ export abstract class SignalAction extends Action {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
-    const thoughtProcessRes =
-      await sql`select world_id from thought_processes left join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId}`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    if (!thoughtProcess) {
-      throw new Error(`Thought process not found for action ${thoughtActionId}`);
-    }
-
     if (!data?.messageId) {
-      const payload = await this.payload(thoughtProcess.world_id, parameters);
+      const payload = await this.payload(this.thoughtProcess.world_id, parameters);
       const messageId = await this.sendSignal(thoughtActionId, this.subsystem.name, payload, this.from_subsystem?.name);
       return { status: 'waiting', data: { messageId } };
     } else {
@@ -238,16 +221,8 @@ export abstract class ReturnAction extends SignalAction {
   }
 
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
-    const thoughtProcessRes =
-      await sql`select thought_processes.id, initiating_message_id, subsystem from thought_processes inner join thought_process_actions on thought_process_actions.thought_process_id = thought_processes.id where thought_process_actions.id = ${thoughtActionId} limit 1`;
-    const thoughtProcess = thoughtProcessRes[0];
-
-    if (!thoughtProcess) {
-      throw new Error(`Thought process not found for action ${thoughtActionId}`);
-    }
-
     const initiatingMessageRes =
-      await sql`select from_subsystem from signals where id = ${thoughtProcess.initiating_message_id} limit 1`;
+      await sql`select from_subsystem from signals where id = ${this.thoughtProcess.initiating_message_id} limit 1`;
     const initiatingMessage = initiatingMessageRes[0];
 
     if (!initiatingMessage) {
@@ -255,7 +230,7 @@ export abstract class ReturnAction extends SignalAction {
     }
 
     // @ts-ignore
-    this.from_subsystem = { name: thoughtProcess.subsystem };
+    this.from_subsystem = { name: this.thoughtProcess.subsystem };
     this.subsystem = { name: initiatingMessage.from_subsystem };
 
     if (!initiatingMessage.from_subsystem) {
@@ -263,9 +238,13 @@ export abstract class ReturnAction extends SignalAction {
       this.subsystem = { name: 'ManualInitiator' };
     }
 
-    const result = super.execute(thoughtActionId, parameters, data);
+    const result = await super.execute(thoughtActionId, parameters, data);
 
-    await sql`update thought_processes set terminated_at = now() where id = ${thoughtProcess.id}`;
+    await sql`update thought_processes set terminated_at = now() where id = ${this.thoughtProcess.id}`;
+
+    if (result.status === 'waiting') {
+      result.status = 'complete';
+    }
 
     return result;
   }
