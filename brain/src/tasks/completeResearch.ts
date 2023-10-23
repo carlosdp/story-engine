@@ -1,7 +1,7 @@
 import { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import logger from '../logging';
+import { sql } from '../db.js';
+import logger from '../logging.js';
 
 // Checks if active research is completed, and informs the Overlord
 // so it can choose a new research target.

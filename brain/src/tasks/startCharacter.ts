@@ -1,9 +1,9 @@
 import { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import { StartCharacterJob } from '../jobs';
-import { Think } from '../subsystems/base';
-import { Storyteller } from '../subsystems/storyteller';
+import { sql } from '../db.js';
+import { StartCharacterJob } from '../jobs.js';
+import { Think } from '../subsystems/base.js';
+import { Storyteller } from '../subsystems/storyteller.js';
 
 export default async (job: Job<StartCharacterJob>) => {
   const characters = await sql`select * from characters where id = ${job.data.playerCharacterId}`;

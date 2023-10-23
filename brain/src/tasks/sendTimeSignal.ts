@@ -1,8 +1,8 @@
 import { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import { TimeSignalJob } from '../jobs';
-import logger from '../logging';
+import { sql } from '../db.js';
+import { TimeSignalJob } from '../jobs.js';
+import logger from '../logging.js';
 
 // Send a special signal to the Overlord denoting the passage of time
 // this is meant to allow the AI to take actions toward its goal, even when not

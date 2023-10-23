@@ -2,6 +2,7 @@
   "name": "application",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "netlify dev",
     "dev:tunnel": "node runWithTunnel.cjs",
@@ -27,7 +28,8 @@
     "@sentry/serverless": "^7.49.0",
     "@supabase/supabase-js": "^2.1.1",
     "axios": "^1.3.5",
-    "axios-retry": "^3.4.0",
+    "axios-retry": "^3.8.0",
+    "eslint-plugin-require-extensions": "^0.1.3",
     "framer-motion": "^6",
     "jsonschema": "^1.4.1",
     "leaflet": "^1.9.3",

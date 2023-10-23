@@ -1,8 +1,8 @@
 import { Button, Flex, Heading, Text } from '@chakra-ui/react';
 import { useCallback } from 'react';
 
-import { useSupabase } from '../SupabaseProvider';
-import { PageContainer } from '../components/PageContainer';
+import { useSupabase } from '../SupabaseProvider.js';
+import { PageContainer } from '../components/PageContainer.js';
 
 export const LinkSteam = () => {
   const { client } = useSupabase();

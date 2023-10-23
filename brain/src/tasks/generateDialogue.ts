@@ -1,8 +1,8 @@
 import type { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import type { GenerateLetterJob } from '../jobs';
-import { message } from '../utils';
+import { sql } from '../db.js';
+import type { GenerateLetterJob } from '../jobs.js';
+import { message } from '../utils.js';
 
 export default async (job: Job<GenerateLetterJob>) => {
   const senderRes = await sql`

@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 
-import { useWorlds } from '../hooks/useWorlds';
+import { useWorlds } from '../hooks/useWorlds.js';
 
 export const WorldDefault = () => {
   const { data: worlds } = useWorlds();

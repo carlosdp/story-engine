@@ -1,6 +1,6 @@
 import type { Job } from 'pg-boss';
 
-import { sql, boss } from '../db';
+import { sql, boss } from '../db.js';
 
 export default async (_job: Job) => {
   // select random character relationship

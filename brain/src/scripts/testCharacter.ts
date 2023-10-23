@@ -1,5 +1,5 @@
-import { sql, boss } from '../db';
-import { embedding } from '../utils';
+import { sql, boss } from '../db.js';
+import { embedding } from '../utils.js';
 
 (async () => {
   const worlds = await sql`select * from worlds`;

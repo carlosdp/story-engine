@@ -1,25 +1,26 @@
 import { Box } from '@chakra-ui/react';
 import { Route, Routes } from 'react-router-dom';
 
-import { AuthenticatedRoutes } from './components/AuthenticatedRoutes';
-import { Brand } from './components/Brand';
-import { TopNav } from './components/TopNav';
-import { WorldDefault } from './components/WorldDefault';
-import { CharacterDetail } from './screens/CharacterDetail';
-import { CharacterList } from './screens/CharacterList';
-import { ConversationDetail } from './screens/ConversationDetail';
-import { ConversationList } from './screens/ConversationList';
-import { CreateScenario } from './screens/CreateScenario';
-import { CreateWorld } from './screens/CreateWorld';
-import { GenerateCharacters } from './screens/GenerateCharacters';
-import { GenerateLetter } from './screens/GenerateLetter';
-import { Login } from './screens/Login';
-import { MockSignals } from './screens/MockSignals';
-import { Observations } from './screens/Observations';
-import { ScenarioDetail } from './screens/ScenarioDetail';
-import { Scenarios } from './screens/Scenarios';
-import { ThoughtProcessDetails } from './screens/ThoughtProcessDetails';
-import { ThoughtProcesses } from './screens/ThoughtProcesses';
+import { AuthenticatedRoutes } from './components/AuthenticatedRoutes.js';
+import { Brand } from './components/Brand.js';
+import { TopNav } from './components/TopNav.js';
+import { WorldDefault } from './components/WorldDefault.js';
+import { CharacterDetail } from './screens/CharacterDetail.js';
+import { CharacterList } from './screens/CharacterList.js';
+import { ConversationDetail } from './screens/ConversationDetail.js';
+import { ConversationList } from './screens/ConversationList.js';
+import { CreateGame } from './screens/CreateGame.js';
+import { CreateScenario } from './screens/CreateScenario.js';
+import { CreateWorld } from './screens/CreateWorld.js';
+import { GenerateCharacters } from './screens/GenerateCharacters.js';
+import { GenerateLetter } from './screens/GenerateLetter.js';
+import { Login } from './screens/Login.js';
+import { MockSignals } from './screens/MockSignals.js';
+import { Observations } from './screens/Observations.js';
+import { ScenarioDetail } from './screens/ScenarioDetail.js';
+import { Scenarios } from './screens/Scenarios.js';
+import { ThoughtProcessDetails } from './screens/ThoughtProcessDetails.js';
+import { ThoughtProcesses } from './screens/ThoughtProcesses.js';
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="/worlds/:worldId/characters" element={<CharacterList />} />
           <Route path="/worlds/:worldId/scenarios/create" element={<CreateScenario />} />
           <Route path="/worlds/:worldId/generate-characters" element={<GenerateCharacters />} />
+          <Route path="/worlds/:worldId/documents/create" element={<CreateGame />} />
           <Route path="/scenarios/:id" element={<ScenarioDetail />} />
           <Route path="/characters/:id" element={<CharacterDetail />} />
           <Route path="/worlds/:worldId/thought_processes" element={<ThoughtProcesses />} />

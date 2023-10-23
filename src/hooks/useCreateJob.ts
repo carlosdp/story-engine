@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 
-import { useSupabase } from '../SupabaseProvider';
-import { Database } from '../supabaseTypes';
+import { useSupabase } from '../SupabaseProvider.js';
+import { Database } from '../supabaseTypes.js';
 
 export const useCreateJob = () => {
   const { client } = useSupabase();

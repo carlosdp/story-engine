@@ -1,9 +1,9 @@
 import { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import { CreateScenarioJob } from '../jobs';
-import { Think } from '../subsystems/base';
-import { Storyteller } from '../subsystems/storyteller';
+import { sql } from '../db.js';
+import { CreateScenarioJob } from '../jobs.js';
+import { Think } from '../subsystems/base.js';
+import { Storyteller } from '../subsystems/storyteller.js';
 
 export default async (job: Job<CreateScenarioJob>) => {
   const scenarios =

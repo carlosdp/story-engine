@@ -7,10 +7,10 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { BrowserRouter } from 'react-router-dom';
 
-import App from './App';
-import { SupabaseProvider } from './SupabaseProvider';
-import { Database } from './supabaseTypes';
-import { theme } from './theme';
+import App from './App.js';
+import { SupabaseProvider } from './SupabaseProvider.js';
+import { Database } from './supabaseTypes.js';
+import { theme } from './theme.js';
 
 if (import.meta.env.MODE === 'production') {
   Sentry.init({

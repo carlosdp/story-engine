@@ -19,6 +19,7 @@ module.exports = {
     'prettier',
     '@emotion',
     'chakra-ui',
+    'require-extensions',
   ],
   extends: [
     'eslint:recommended',
@@ -31,6 +32,7 @@ module.exports = {
     'plugin:jsx-a11y/recommended',
     'plugin:sonarjs/recommended',
     'plugin:prettier/recommended',
+    'plugin:require-extensions/recommended',
   ],
   settings: {
     react: {
@@ -49,7 +51,7 @@ module.exports = {
       jsx: true,
     },
   },
-  ignorePatterns: ['node_modules', 'build', '*-build', '*.json'],
+  ignorePatterns: ['node_modules', 'build', '*-build', '*.json', 'supabaseTypes.d.ts'],
   rules: {
     /**
      * eslint

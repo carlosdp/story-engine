@@ -3,8 +3,8 @@ import { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useCreateScenario } from '../hooks/useCreateScenario';
+import { PageContainer } from '../components/PageContainer.js';
+import { useCreateScenario } from '../hooks/useCreateScenario.js';
 
 type ScenarioCreationParameters = {
   name: string;
@@ -32,7 +32,7 @@ export const CreateScenario = () => {
 
   return (
     <PageContainer>
-      <Heading paddingBottom="16px">Create New World</Heading>
+      <Heading paddingBottom="16px">Create New Scenario</Heading>
       <Flex flexDirection="column" gap="22px">
         <Flex flexDirection="column" gap="12px">
           <FormControl isInvalid={!!formState.errors.name} isRequired={true}>

@@ -1,8 +1,8 @@
-import { ReturnAction, SignalActionPayload } from '../action';
-import { Action, ActionResult } from '../action';
-import { sql } from '../db';
-import { embedding } from '../utils';
-import { LLMSubsystem } from './base';
+import { ReturnAction, SignalActionPayload } from '../action.js';
+import { Action, ActionResult } from '../action.js';
+import { sql } from '../db.js';
+import { embedding } from '../utils.js';
+import { LLMSubsystem } from './base.js';
 
 class SelfReflection extends Action {
   description = 'Reflect on a thought or idea to inform later action decisions';

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import axiosRetry from 'axios-retry';
 
-import logger from './logging';
+import logger from './logging.js';
 
 export const message = async (
   model: string,

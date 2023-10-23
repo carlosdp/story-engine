@@ -1,16 +1,17 @@
-import { boss } from './db';
-import logger from './logging';
-import completeResearch from './tasks/completeResearch';
-import createScenario from './tasks/createScenario';
-import generateCharacters from './tasks/generateCharacters';
-import generateDialogue from './tasks/generateDialogue';
-import generateLetter from './tasks/generateLetter';
-import generateRandomDialogue from './tasks/generateRandomDialogue';
-import generateRandomLetters from './tasks/generateRandomLetters';
-import processActions from './tasks/processActions';
-import processSignals from './tasks/processSignals';
-import sendTimeSignal from './tasks/sendTimeSignal';
-import startCharacter from './tasks/startCharacter';
+import { boss } from './db.js';
+import logger from './logging.js';
+import completeResearch from './tasks/completeResearch.js';
+import createScenario from './tasks/createScenario.js';
+import generateCharacters from './tasks/generateCharacters.js';
+import generateDialogue from './tasks/generateDialogue.js';
+import generateLetter from './tasks/generateLetter.js';
+import generateRandomDialogue from './tasks/generateRandomDialogue.js';
+import generateRandomLetters from './tasks/generateRandomLetters.js';
+import processActions from './tasks/processActions.js';
+import processSignals from './tasks/processSignals.js';
+import sendTimeSignal from './tasks/sendTimeSignal.js';
+import startCharacter from './tasks/startCharacter.js';
+import submitDesignDocument from './tasks/submitDesignDocument.js';
 
 logger.info('Brain booting up...');
 
@@ -28,6 +29,7 @@ const jobFunctions = {
   generateRandomDialogue: generateRandomDialogue,
   startCharacter: startCharacter,
   createScenario: createScenario,
+  submitDesignDocument: submitDesignDocument,
 };
 
 // eslint-disable-next-line @typescript-eslint/ban-types

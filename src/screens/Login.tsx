@@ -2,8 +2,8 @@ import { Button, Center, Flex, Heading, Text } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
-import { useSupabase } from '../SupabaseProvider';
-import { PageContainer } from '../components/PageContainer';
+import { useSupabase } from '../SupabaseProvider.js';
+import { PageContainer } from '../components/PageContainer.js';
 
 export const Login = () => {
   const { client, user } = useSupabase();

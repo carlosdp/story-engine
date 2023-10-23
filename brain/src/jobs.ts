@@ -30,3 +30,7 @@ export type CreateCharacterJob = {
   storylineId: string;
   characterId: string;
 };
+
+export type SubmitDesignDocumentJob = {
+  designDocumentId: string;
+};

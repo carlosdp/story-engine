@@ -14,8 +14,8 @@ import {
 } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useConversation } from '../hooks/useConversation';
+import { PageContainer } from '../components/PageContainer.js';
+import { useConversation } from '../hooks/useConversation.js';
 
 export const ConversationDetail = () => {
   const { id } = useParams<{ id: string }>();

@@ -1,8 +1,8 @@
 import { Badge, Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useConversations } from '../hooks/useConversations';
+import { PageContainer } from '../components/PageContainer.js';
+import { useConversations } from '../hooks/useConversations.js';
 
 export const ConversationList = () => {
   const { worldId } = useParams<{ worldId: string }>();

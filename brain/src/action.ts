@@ -1,10 +1,10 @@
 import { validate } from 'jsonschema';
 
-import { sql } from './db';
-import { ActionGate } from './gate';
-import type { Thinker } from './subsystems/base';
-import { Database } from './supabaseTypes';
-import { embedding } from './utils';
+import { sql } from './db.js';
+import { ActionGate } from './gate.js';
+import type { Thinker } from './subsystems/base.js';
+import { Database } from './supabaseTypes.js';
+import { embedding } from './utils.js';
 
 export type Observation = {
   subsystem: string;

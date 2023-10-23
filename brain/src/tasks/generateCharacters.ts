@@ -1,11 +1,9 @@
 import type { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import type { GenerateCharactersJob } from '../jobs';
-import logger from '../logging';
-import { embedding, message } from '../utils';
+import { sql } from '../db.js';
+import type { GenerateCharactersJob } from '../jobs.js';
+import { embedding, message } from '../utils.js';
 
-const AVG_NUMBER_OF_RELATIONSHIPS = 3;
 const COUNTRIES = [
   'United States',
   'Canada',

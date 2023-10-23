@@ -1,7 +1,7 @@
-import { CharacterBuilder } from './characterBuilder';
-import { LocationBuilder } from './locationBuilder';
-import { MissionBuilder } from './missionBuilder';
-import { Storyteller } from './storyteller';
+import { CharacterBuilder } from './characterBuilder.js';
+import { LocationBuilder } from './locationBuilder.js';
+import { MissionBuilder } from './missionBuilder.js';
+import { Storyteller } from './storyteller.js';
 
 export default {
   Storyteller,

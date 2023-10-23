@@ -1,5 +1,4 @@
 import {
-  Badge,
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -18,8 +17,8 @@ import {
 } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useScenario } from '../hooks/useScenario';
+import { PageContainer } from '../components/PageContainer.js';
+import { useScenario } from '../hooks/useScenario.js';
 
 export const ScenarioDetail = () => {
   const { id } = useParams<{ id: string }>();

@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import SteamAuth from 'node-steam-openid';
 
-import type { Database } from '../../src/supabaseTypes';
+import type { Database } from '../../src/supabaseTypes.js';
 
 if (process.env.NODE_ENV === 'production') {
   Sentry.AWSLambda.init({

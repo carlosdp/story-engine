@@ -2,8 +2,8 @@ import { Box, Button, useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useSupabase } from '../SupabaseProvider';
-import { PageContainer } from '../components/PageContainer';
+import { useSupabase } from '../SupabaseProvider.js';
+import { PageContainer } from '../components/PageContainer.js';
 
 export const MockSignals = () => {
   const { worldId } = useParams<{ worldId: string }>();

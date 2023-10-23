@@ -1,9 +1,9 @@
 import { Job } from 'pg-boss';
 
-import { boss, sql } from '../db';
-import logger from '../logging';
-import subsystems from '../subsystems';
-import { Think } from '../subsystems/base';
+import { boss, sql } from '../db.js';
+import logger from '../logging.js';
+import { Think } from '../subsystems/base.js';
+import subsystems from '../subsystems/index.js';
 
 export default async (job: Job) => {
   logger.debug(`Checking for actions, ${job.id}`);

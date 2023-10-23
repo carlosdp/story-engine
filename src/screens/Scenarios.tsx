@@ -1,8 +1,8 @@
 import { Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useScenarios } from '../hooks/useScenarios';
+import { PageContainer } from '../components/PageContainer.js';
+import { useScenarios } from '../hooks/useScenarios.js';
 
 export const Scenarios = () => {
   const { worldId } = useParams<{ worldId: string }>();

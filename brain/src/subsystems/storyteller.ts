@@ -1,13 +1,13 @@
-import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action';
-import { sql } from '../db';
-import { StoryAvailableGate } from '../gate';
-import logger from '../logging';
-import { SubsystemMessage } from '../signal';
-import { embedding } from '../utils';
-import { LLMSubsystem } from './base';
-import { CharacterBuilder } from './characterBuilder';
-import { LocationBuilder } from './locationBuilder';
-import { MissionBuilder } from './missionBuilder';
+import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action.js';
+import { sql } from '../db.js';
+import { StoryAvailableGate } from '../gate.js';
+import logger from '../logging.js';
+import { SubsystemMessage } from '../signal.js';
+import { embedding } from '../utils.js';
+import { LLMSubsystem } from './base.js';
+import { CharacterBuilder } from './characterBuilder.js';
+import { LocationBuilder } from './locationBuilder.js';
+import { MissionBuilder } from './missionBuilder.js';
 
 class CreateCharacter extends SignalAction {
   description = 'Create a character for use in the storyline, returns the name of the character';

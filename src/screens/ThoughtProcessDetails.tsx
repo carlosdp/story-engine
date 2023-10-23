@@ -15,9 +15,9 @@ import {
 import moment from 'moment';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useHydratedThoughtProcess } from '../hooks/useHydratedThoughtProcess';
-import { useThoughtProcess } from '../hooks/useThoughtProcess';
+import { PageContainer } from '../components/PageContainer.js';
+import { useHydratedThoughtProcess } from '../hooks/useHydratedThoughtProcess.js';
+import { useThoughtProcess } from '../hooks/useThoughtProcess.js';
 
 type ThoughtItem = NonNullable<ReturnType<typeof useHydratedThoughtProcess>['data']>['events'][number];
 

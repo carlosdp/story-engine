@@ -1,6 +1,6 @@
-import { useSupabase } from '../SupabaseProvider';
-import { LinkSteam } from './LinkSteam';
-import { SteamLinked } from './SteamLinked';
+import { useSupabase } from '../SupabaseProvider.js';
+import { LinkSteam } from './LinkSteam.js';
+import { SteamLinked } from './SteamLinked.js';
 
 export const Register = () => {
   const { user } = useSupabase();

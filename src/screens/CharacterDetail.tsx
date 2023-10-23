@@ -21,9 +21,9 @@ import {
 } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useCharacter } from '../hooks/useCharacter';
-import { useCharacterRelationships } from '../hooks/useCharacterRelationships';
+import { PageContainer } from '../components/PageContainer.js';
+import { useCharacter } from '../hooks/useCharacter.js';
+import { useCharacterRelationships } from '../hooks/useCharacterRelationships.js';
 
 export const CharacterDetail = () => {
   const { id } = useParams<{ id: string }>();

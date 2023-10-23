@@ -207,6 +207,26 @@ export interface Database {
           writing_style?: string
         }
       }
+      design_documents: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          world_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          world_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          world_id?: string
+        }
+      }
       job: {
         Row: {
           completedon: string | null
@@ -1078,6 +1098,13 @@ export interface Database {
           time_weight: number
           final_weight: number
         }[]
+      }
+      submit_design_document: {
+        Args: {
+          world_id: string
+          content: string
+        }
+        Returns: string
       }
       switch_research: {
         Args: {

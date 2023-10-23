@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-import { useSupabase } from '../SupabaseProvider';
+import { useSupabase } from '../SupabaseProvider.js';
 
 export const AuthenticatedRoutes = () => {
   const { user } = useSupabase();

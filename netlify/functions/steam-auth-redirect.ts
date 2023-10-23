@@ -4,7 +4,7 @@ import * as Sentry from '@sentry/serverless';
 import { createClient } from '@supabase/supabase-js';
 import SteamAuth from 'node-steam-openid';
 
-import type { Database } from '../../src/supabaseTypes';
+import type { Database } from '../../src/supabaseTypes.js';
 
 if (process.env.NODE_ENV === 'production') {
   Sentry.AWSLambda.init({

@@ -1,9 +1,9 @@
-import { Action, ActionConstructor, SignalActionPayload } from '../action';
-import { sql } from '../db';
-import logger from '../logging';
-import { SubsystemMessage } from '../signal';
-import type { Database } from '../supabaseTypes';
-import { rawMessage } from '../utils';
+import { Action, ActionConstructor, SignalActionPayload } from '../action.js';
+import { sql } from '../db.js';
+import logger from '../logging.js';
+import { SubsystemMessage } from '../signal.js';
+import type { Database } from '../supabaseTypes.js';
+import { rawMessage } from '../utils.js';
 
 export type ActionCommand = {
   thought: string;

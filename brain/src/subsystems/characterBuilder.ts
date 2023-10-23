@@ -1,9 +1,9 @@
-import { ReturnAction, SignalActionPayload } from '../action';
-import { Action, ActionResult } from '../action';
-import { sql } from '../db';
-import { embedding } from '../utils';
-import { LLMSubsystem } from './base';
-import { getRandomCountry } from './countries';
+import { ReturnAction, SignalActionPayload } from '../action.js';
+import { Action, ActionResult } from '../action.js';
+import { sql } from '../db.js';
+import { embedding } from '../utils.js';
+import { LLMSubsystem } from './base.js';
+import { getRandomCountry } from './countries.js';
 
 class ChooseGender extends Action {
   description = 'Chooses a random gender';

@@ -2,8 +2,8 @@ import { Box, Button, Flex, Heading, Image, Link, Text, useToken } from '@chakra
 import { AiFillCheckCircle } from 'react-icons/ai';
 import { BsFillHandThumbsUpFill } from 'react-icons/bs';
 
-import { useSupabase } from '../SupabaseProvider';
-import { PageContainer } from '../components/PageContainer';
+import { useSupabase } from '../SupabaseProvider.js';
+import { PageContainer } from '../components/PageContainer.js';
 
 export const SteamLinked = () => {
   const { user } = useSupabase();

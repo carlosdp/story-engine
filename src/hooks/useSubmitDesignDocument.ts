@@ -3,17 +3,17 @@ import { useCallback } from 'react';
 import { useSupabase } from '../SupabaseProvider.js';
 import { Database } from '../supabaseTypes.js';
 
-export const useCreateWorld = () => {
+export const useSubmitDesignDocument = () => {
   const { client } = useSupabase();
 
   const create = useCallback(
-    async (world: Database['public']['Functions']['create_world']['Args']) => {
-      const res = await client.rpc('create_world', world).select('id').single();
+    async (game: Database['public']['Functions']['submit_design_document']['Args']) => {
+      const res = await client.rpc('submit_design_document', game);
       if (res.error) {
         throw new Error(res.error.message);
       }
 
-      return res.data.id;
+      return res.data;
     },
     [client]
   );

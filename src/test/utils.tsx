@@ -4,7 +4,7 @@ import { cleanup, render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach } from 'vitest';
 
-import { theme } from '../theme';
+import { theme } from '../theme.js';
 
 afterEach(() => {
   cleanup();

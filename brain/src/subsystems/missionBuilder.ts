@@ -1,6 +1,6 @@
-import { Action, ActionResult } from '../action';
-import { sql } from '../db';
-import { LLMSubsystem } from './base';
+import { Action, ActionResult } from '../action.js';
+import { sql } from '../db.js';
+import { LLMSubsystem } from './base.js';
 
 class MissionGraph extends Action {
   description = 'Define a mission graph for a player or NPC character';

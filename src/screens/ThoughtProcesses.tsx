@@ -2,8 +2,8 @@ import { Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@
 import moment from 'moment';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useThoughtProcesses } from '../hooks/useThoughtProcesses';
+import { PageContainer } from '../components/PageContainer.js';
+import { useThoughtProcesses } from '../hooks/useThoughtProcesses.js';
 
 export const ThoughtProcesses = () => {
   const { worldId } = useParams<{ worldId: string }>();

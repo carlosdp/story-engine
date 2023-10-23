@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AiFillCaretDown } from 'react-icons/ai';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 
-import { useWorlds } from '../hooks/useWorlds';
+import { useWorlds } from '../hooks/useWorlds.js';
 
 const nav = {
   Scenarios: '/scenarios',

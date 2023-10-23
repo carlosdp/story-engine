@@ -2,8 +2,8 @@ import { Box, Button, Heading, useToast } from '@chakra-ui/react';
 import { useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useCreateJob } from '../hooks/useCreateJob';
+import { PageContainer } from '../components/PageContainer.js';
+import { useCreateJob } from '../hooks/useCreateJob.js';
 
 export const GenerateLetter = () => {
   const { worldId } = useParams<{ worldId: string }>();

@@ -1,7 +1,7 @@
 import { AuthUser, SupabaseClient } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
-import { Database } from './supabaseTypes';
+import { Database } from './supabaseTypes.js';
 
 type User = AuthUser & Database['public']['Views']['users']['Row'];
 type SupabaseContextProps = {

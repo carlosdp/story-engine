@@ -1,5 +1,5 @@
-import * as PgBoss from 'pg-boss';
-import * as postgres from 'postgres';
+import PgBoss from 'pg-boss';
+import postgres from 'postgres';
 
 const DB_URL = process.env.DB_URL ?? 'postgres://postgres:postgres@localhost:54322/postgres';
 

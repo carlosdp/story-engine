@@ -17,8 +17,8 @@ import { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useCreateJob } from '../hooks/useCreateJob';
+import { PageContainer } from '../components/PageContainer.js';
+import { useCreateJob } from '../hooks/useCreateJob.js';
 
 type CharacterJob = {
   count: number;

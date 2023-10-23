@@ -1,8 +1,8 @@
 import { Job } from 'pg-boss';
 
-import { sql } from '../db';
-import { CreateCharacterJob } from '../jobs';
-import { Storyteller } from '../subsystems/storyteller';
+import { sql } from '../db.js';
+import { CreateCharacterJob } from '../jobs.js';
+import { Storyteller } from '../subsystems/storyteller.js';
 
 export default async (job: Job<CreateCharacterJob>) => {
   const stories = await sql`select * from stories where storylines.id = ${job.data.storylineId} limit 1`;

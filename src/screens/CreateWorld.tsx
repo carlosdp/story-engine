@@ -3,8 +3,8 @@ import { useCallback } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useCreateWorld } from '../hooks/useCreateWorld';
+import { PageContainer } from '../components/PageContainer.js';
+import { useCreateWorld } from '../hooks/useCreateWorld.js';
 
 type WorldCreationParameters = {
   name: string;

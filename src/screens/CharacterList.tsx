@@ -1,8 +1,8 @@
 import { Box, Button, Center, Spinner, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
-import { PageContainer } from '../components/PageContainer';
-import { useCharacters } from '../hooks/useCharacters';
+import { PageContainer } from '../components/PageContainer.js';
+import { useCharacters } from '../hooks/useCharacters.js';
 
 export const CharacterList = () => {
   const { worldId } = useParams<{ worldId: string }>();
