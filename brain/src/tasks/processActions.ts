@@ -9,7 +9,7 @@ export default async (job: Job) => {
   logger.debug(`Checking for actions, ${job.id}`);
 
   const processActions =
-    await sql`select * from thought_process_actions where status = 'waiting' or status = 'pending'`;
+    await sql`select tpa.* from thought_process_actions tpa left join thought_processes tp on tp.id = tpa.thought_process_id where tp.terminated_at is null and (tpa.status = 'waiting' or tpa.status = 'pending')`;
 
   await Think.processActions(subsystems, processActions);
 

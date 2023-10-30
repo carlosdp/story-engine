@@ -242,10 +242,6 @@ export abstract class ReturnAction extends SignalAction {
 
     await sql`update thought_processes set terminated_at = now() where id = ${this.thoughtProcess.id}`;
 
-    if (result.status === 'waiting') {
-      result.status = 'complete';
-    }
-
     return result;
   }
 }

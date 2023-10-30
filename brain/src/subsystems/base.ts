@@ -194,6 +194,8 @@ export abstract class LLMSubsystem extends Think {
 
   model: 'gpt-3.5-turbo' | 'gpt-4' | 'gpt-4-0613' = 'gpt-3.5-turbo';
   temperature = 0.4;
+  // if user-space messages are above this limit, compress them
+  compressionLimit = 5000;
 
   protected thoughtProcess!: Database['public']['Tables']['thought_processes']['Row'] & { data: any };
 
@@ -291,6 +293,8 @@ export abstract class LLMSubsystem extends Think {
 
     await this.saveMessages(thoughtProcessId, messages);
 
+    await this.compressMessages();
+
     return thoughtProcessId;
   }
 
@@ -307,6 +311,8 @@ export abstract class LLMSubsystem extends Think {
     messages.push(response);
 
     await this.saveMessages(thoughtProcessId, messages);
+
+    await this.compressMessages();
 
     return thoughtProcessId;
   }
@@ -327,6 +333,8 @@ export abstract class LLMSubsystem extends Think {
     messages.push(response);
 
     await this.saveMessages(thoughtProcessId, messages);
+
+    await this.compressMessages();
 
     return thoughtProcessId;
   }
@@ -407,6 +415,47 @@ export abstract class LLMSubsystem extends Think {
     return response;
   }
 
+  private async compressMessages() {
+    const messagesRes = await sql`select * from compressed_thought_process_messages(${this.thoughtProcess.id})`;
+    const characterCount = messagesRes.reduce((acc, message) => acc + message.content.length, 0);
+
+    if (characterCount < this.compressionLimit) {
+      return;
+    }
+
+    const messages = messagesRes
+      .filter(message => !message.summary)
+      .map(message => ({ role: message.role, content: message.content }));
+
+    if (messages.length === 0) {
+      return;
+    }
+
+    logger.debug(`Compressing ${messages.length} messages`);
+
+    const response = await rawMessage(
+      'gpt-3.5-turbo',
+      [
+        {
+          role: 'system',
+          content:
+            'Summarize what actions were done by the following user and agent messages. Include IDs of resources created or modified. The summary should be in bullet points, terse, but thorough.',
+        },
+        ...messages,
+        { role: 'system', content: 'Summary in bullet points:' },
+      ],
+      400,
+      0
+    );
+
+    await sql`insert into thought_process_messages ${sql({
+      thought_process_id: this.thoughtProcess.id,
+      role: 'system',
+      content: `Summary of previous actions: ${response.content}`,
+      summary: true,
+    })}`;
+  }
+
   private async generateBaseMessage() {
     const instructions = await this.instructions();
     const actionsInstruction = ACTION_INSTRUCTIONS.replace(
@@ -431,8 +480,7 @@ export abstract class LLMSubsystem extends Think {
   }
 
   private async getMessages(thoughtProcessId: string) {
-    const messagesRes =
-      await sql`select * from thought_process_messages where thought_process_id = ${thoughtProcessId}`;
+    const messagesRes = await sql`select * from compressed_thought_process_messages(${thoughtProcessId})`;
     return messagesRes.map(message => ({ role: message.role, content: message.content }));
   }
 }

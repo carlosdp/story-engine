@@ -749,6 +749,7 @@ export interface Database {
           created_at: string
           id: string
           role: string
+          summary: boolean | null
           thought_process_id: string
           updated_at: string
         }
@@ -757,6 +758,7 @@ export interface Database {
           created_at?: string
           id?: string
           role: string
+          summary?: boolean | null
           thought_process_id: string
           updated_at?: string
         }
@@ -765,6 +767,7 @@ export interface Database {
           created_at?: string
           id?: string
           role?: string
+          summary?: boolean | null
           thought_process_id?: string
           updated_at?: string
         }
