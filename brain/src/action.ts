@@ -22,6 +22,7 @@ export type ActionConstructor = new (thoughtProcess: Action['thoughtProcess']) =
 export abstract class Action {
   abstract description: string;
   abstract parameters: Record<string, any>;
+  required: string[] = [];
 
   protected thoughtProcess: Database['public']['Tables']['thought_processes']['Row'] & { data: any };
 
@@ -53,6 +54,7 @@ export abstract class Action {
   validate(parameters: Record<string, unknown>) {
     const schema = {
       type: 'object',
+      required: this.required,
       properties: this.parameters,
     };
 
@@ -68,7 +70,13 @@ export abstract class Action {
   }
 
   serializeDefinition() {
-    return `${this.name}: ${this.description}. Parameters JSON Schema: ${JSON.stringify(this.parameters)}`;
+    return `${this.name}: ${this.description}. Parameters JSON Schema: ${JSON.stringify(
+      Object.fromEntries(
+        Object.entries(this.parameters).map(kv =>
+          this.required.includes(kv[0]) ? [kv[0], { ...kv[1], required: true }] : kv
+        )
+      )
+    )}`;
   }
 
   protected async sendSignal(
@@ -122,6 +130,15 @@ export abstract class Action {
     const message = messageRes[0];
 
     if (!message) {
+      // check if signaled thought process is terminated
+      const thoughtProcessRes = await sql`select * from thought_processes where initiating_message_id = ${messageId}`;
+      const thoughtProcess = thoughtProcessRes[0];
+
+      if (thoughtProcess && thoughtProcess.terminated_at) {
+        return { result: 'Task Completed' };
+      }
+
+      // otherwise, thought process hasn't finished yet
       return null;
     }
 

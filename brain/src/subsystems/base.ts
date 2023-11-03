@@ -359,7 +359,21 @@ export abstract class LLMSubsystem extends Think {
       );
       logger.debug(response.content);
 
-      const actionCommand = JSON.parse(response.content) as ActionCommand;
+      let actionCommand: ActionCommand;
+
+      try {
+        actionCommand = JSON.parse(response.content) as ActionCommand;
+      } catch (error: any) {
+        logger.warn(`Invalid JSON: ${error.message}`);
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: `Invalid JSON. Try again.`,
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
 
       if (!actionCommand.thought) {
         logger.debug('No thought, invalid response');
@@ -375,6 +389,9 @@ export abstract class LLMSubsystem extends Think {
 
       if (!actionCommand.action || actionCommand.action === 'null') {
         logger.debug('No action, returning');
+
+        await sql`update thought_processes set terminated_at = now() where id = ${this.thoughtProcess.id}`;
+
         return response;
       }
 
