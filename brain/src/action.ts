@@ -197,7 +197,6 @@ export abstract class Action {
 export type SignalActionPayload = any;
 
 export abstract class SignalAction extends Action {
-  from_subsystem: (new () => Thinker) | null = null;
   abstract subsystem: new () => Thinker;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -209,7 +208,12 @@ export abstract class SignalAction extends Action {
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
     if (!data?.messageId) {
       const payload = await this.payload(this.thoughtProcess.world_id, parameters);
-      const messageId = await this.sendSignal(thoughtActionId, this.subsystem.name, payload, this.from_subsystem?.name);
+      const messageId = await this.sendSignal(
+        thoughtActionId,
+        this.subsystem.name,
+        payload,
+        this.thoughtProcess.subsystem
+      );
       return { status: 'waiting', data: { messageId } };
     } else {
       const response = await this.getSignalResponse(data.messageId);

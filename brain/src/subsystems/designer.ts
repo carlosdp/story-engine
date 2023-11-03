@@ -10,7 +10,6 @@ class ModifyStory extends SignalAction {
     text: { type: 'string', description: 'text of the story' },
   };
   required = ['text'];
-  from_subsystem = Designer;
   subsystem = StoryBuilder;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {

@@ -10,7 +10,6 @@ class CreateCharacter extends SignalAction {
     description: { type: 'string', description: 'a description of the individual character that is needed' },
     story: { type: 'string', description: 'relevant parts of the story text to use as context' },
   };
-  from_subsystem = StoryBuilder;
   subsystem = EntityBuilder;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
@@ -54,7 +53,6 @@ class CreateLocation extends SignalAction {
     description: { type: 'string', description: 'a description of the location' },
     story: { type: 'string', description: 'relevant parts of the story text to use as context' },
   };
-  from_subsystem = StoryBuilder;
   subsystem = EntityBuilder;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
@@ -75,7 +73,6 @@ class CreateOrganization extends SignalAction {
     description: { type: 'string', description: 'a description of the organization' },
     story: { type: 'string', description: 'relevant parts of the story text to use as context' },
   };
-  from_subsystem = StoryBuilder;
   subsystem = EntityBuilder;
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
