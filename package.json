@@ -12,6 +12,7 @@
     "brain": "cd brain && tsc && yarn run:brain",
     "brain:test": "cd brain && tsc && yarn run:brain:test",
     "brain:test:seed": "cd brain && tsc && cd .. && node brain/dist/src/test/test.js",
+    "brain:test:seed:character": "cd brain && tsc && cd .. && node brain/dist/src/test/characterTest.js",
     "run:brain": "node brain/dist/src/brain.js",
     "run:brain:test": "node brain/dist/src/loop.js",
     "preview": "vite preview",

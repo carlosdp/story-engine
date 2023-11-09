@@ -207,14 +207,18 @@ export abstract class SignalAction extends Action {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async execute(thoughtActionId: string, parameters: Record<string, unknown>, data: any): Promise<ActionResult> {
     if (!data?.messageId) {
-      const payload = await this.payload(this.thoughtProcess.world_id, parameters);
-      const messageId = await this.sendSignal(
-        thoughtActionId,
-        this.subsystem.name,
-        payload,
-        this.thoughtProcess.subsystem
-      );
-      return { status: 'waiting', data: { messageId } };
+      if (this.subsystem.name !== 'ManualInitiator') {
+        const payload = await this.payload(this.thoughtProcess.world_id, parameters);
+        const messageId = await this.sendSignal(
+          thoughtActionId,
+          this.subsystem.name,
+          payload,
+          this.thoughtProcess.subsystem
+        );
+        return { status: 'waiting', data: { messageId } };
+      } else {
+        return { status: 'waiting', data };
+      }
     } else {
       const response = await this.getSignalResponse(data.messageId);
       if (response === null) {

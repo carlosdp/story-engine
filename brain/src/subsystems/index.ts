@@ -3,6 +3,7 @@ import { Designer } from './designer.js';
 import { EntityBuilder } from './entityBuilder.js';
 import { LocationBuilder } from './locationBuilder.js';
 import { MissionBuilder } from './missionBuilder.js';
+import { PhaseConstructor } from './phaseConstructor.js';
 import { StoryBuilder } from './storyBuilder.js';
 import { Storyteller } from './storyteller.js';
 
@@ -14,4 +15,5 @@ export default {
   Designer,
   StoryBuilder,
   EntityBuilder,
+  PhaseConstructor,
 };

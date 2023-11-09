@@ -6,6 +6,7 @@ create table entities (
   classification varchar not null,
   embedding vector(1536) not null,
   state text not null,
+  change_history text not null default '',
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now()
 );

@@ -1,7 +1,8 @@
-import { Action, ActionResult, SignalAction, SignalActionPayload } from '../action.js';
+import { SignalAction, SignalActionPayload } from '../action.js';
 import { sql } from '../db.js';
 import { SubsystemMessage } from '../signal.js';
 import { LLMSubsystem } from './base.js';
+import { PhaseConstructor } from './phaseConstructor.js';
 import { StoryBuilder } from './storyBuilder.js';
 
 class ModifyStory extends SignalAction {
@@ -21,51 +22,57 @@ class ModifyStory extends SignalAction {
   }
 }
 
-class ModifyRules extends Action {
-  description = 'Modify the world game rules and procedures';
+class AddPhase extends SignalAction {
+  description = 'Add a new phase to the procedural loop';
   parameters = {
-    rules: { type: 'string', description: 'the new rules in plain text' },
+    parentPhase: {
+      type: 'string',
+      description: 'which parent phase this phase belongs to',
+      enum: ['Pre-Play', 'Play', 'Post-Play'],
+    },
+    name: { type: 'string', description: 'a name for the phase' },
+    description: {
+      type: 'string',
+      description: 'detailed description of what happens in this phase',
+    },
+    // todo: add optional ordering parameter
   };
-  required = ['rules'];
+  required = ['parentPhase', 'name', 'description'];
+  subsystem = PhaseConstructor;
 
-  async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
-    return { status: 'complete', data: {} };
+  async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
+    return { command: 'Create this phase', parameters, designDocumentId: this.thoughtProcess.data.designDocumentId };
   }
 
-  async result(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<string> {
-    return 'Rules modified';
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return response.result;
   }
 }
 
-// class ModifyEntities extends Action {
-//   description = 'Modify the world entities, such as characters, locations, etc.';
-//   parameters = {
-//     rules: { type: 'string', description: 'the new rules in plain text' },
-//   };
-//   required = ['rules'];
-
-//   async execute(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<ActionResult> {
-//     return { status: 'complete', data: {} };
-//   }
-
-//   async result(_thoughtActionId: string, _parameters: Record<string, unknown>, _data: any): Promise<string> {
-//     return 'Rules modified';
-//   }
-// }
-
 export class Designer extends LLMSubsystem {
   description = 'Responsible for making changes to the world based on a design document';
-  actions = [ModifyStory, ModifyRules];
+  actions = [ModifyStory, AddPhase];
   agentPurpose =
     'You are a superintelligent game designer. Your job is to make changes in a video-game world and structure based on the given design document (or changes to the existing design).';
   model = 'gpt-4' as const;
   temperature = 0;
 
   override async instructions(): Promise<string[]> {
+    const documentRes =
+      await sql`select content from design_documents where id = ${this.thoughtProcess.data.designDocumentId}`;
+    const document = documentRes[0];
+
     return [
       'Break up the document using the provided actions to store individual concepts',
-      'Use one action for each semantic concept, for example one story for each distinct narrative, rules should be grouped by ones that are related, etc.',
-      'Once every relevant concept has been stored, you are done',
+      'Use one action for each semantic concept, for example one story for each distinct narrative, etc.',
+      `The game's procedural loop is expressed as a list of phases, executed in order in three categories:
+      > Pre-Play: Set of phases that happen before the main game loop begins
+      > Play: The main game loop, phases are executed in order until the game is ended (so the last phase(s) should be checks to see if end conditions are met)
+      > Post-Play: Set of phases that happen after the game ends`,
+      'Avoid overlap in responsibility between phases',
+      'Once every relevant concept has been acted on, you are done',
+      'Start with the phases, then move on to the story elements',
+      `Document:\n${document.content}`,
     ];
   }
 

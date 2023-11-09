@@ -13,8 +13,8 @@ create or replace function submit_design_document(world_id uuid, content text) r
     values (world_id, content)
     returning id into design_document_id;
 
-    insert into public.job (name, data)
-    values ('submitDesignDocument', json_build_object('designDocumentId', design_document_id)::json);
+    insert into signals (world_id, subsystem, payload)
+    values (world_id, 'Designer', json_build_object('designDocumentId', design_document_id)::json);
 
     return design_document_id;
   end;
