@@ -29,3 +29,5 @@ create table stories (
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now()
 );
+
+alter table worlds add column phases jsonb not null default '{}'::jsonb;

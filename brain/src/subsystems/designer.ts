@@ -49,9 +49,41 @@ class AddPhase extends SignalAction {
   }
 }
 
+class ModifyPhase extends SignalAction {
+  description = 'Modify a phase in the procedural loop';
+  parameters = {
+    index: { type: 'number', description: 'the index of the phase to modify' },
+    parentPhase: {
+      type: 'string',
+      description: 'which parent phase this phase belongs to',
+      enum: ['Pre-Play', 'Play', 'Post-Play'],
+    },
+    name: { type: 'string', description: 'a name for the phase' },
+    description: {
+      type: 'string',
+      description: 'detailed description of what happens in this phase',
+    },
+  };
+  required = ['index', 'parentPhase', 'name', 'description'];
+  subsystem = PhaseConstructor;
+
+  async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
+    return {
+      command: 'Modify this phase',
+      index: parameters.index,
+      parameters,
+      designDocumentId: this.thoughtProcess.data.designDocumentId,
+    };
+  }
+
+  async responseToResult(_parameters: Record<string, unknown>, response: SignalActionPayload): Promise<string> {
+    return response.result;
+  }
+}
+
 export class Designer extends LLMSubsystem {
   description = 'Responsible for making changes to the world based on a design document';
-  actions = [ModifyStory, AddPhase];
+  actions = [ModifyStory, AddPhase, ModifyPhase];
   agentPurpose =
     'You are a superintelligent game designer. Your job is to make changes in a video-game world and structure based on the given design document (or changes to the existing design).';
   model = 'gpt-4' as const;
@@ -61,6 +93,28 @@ export class Designer extends LLMSubsystem {
     const documentRes =
       await sql`select content from design_documents where id = ${this.thoughtProcess.data.designDocumentId}`;
     const document = documentRes[0];
+
+    const worldRes = await sql`select * from worlds where id = ${this.thoughtProcess.world_id}`;
+    const world = worldRes[0];
+
+    let i = 0;
+
+    const parentPhases = Object.entries(world.phases);
+
+    const phases = {
+      'Pre-Play':
+        parentPhases
+          .find((p: any) => p[0] === 'Pre-Play')
+          ?.map((p: any) => ({ index: i++, name: p.name, description: p.description })) ?? [],
+      Play:
+        parentPhases
+          .find((p: any) => p[0] === 'Play')
+          ?.map((p: any) => ({ index: i++, name: p.name, description: p.description })) ?? [],
+      'Post-Play':
+        parentPhases
+          .find((p: any) => p[0] === 'Post-Play')
+          ?.map((p: any) => ({ index: i++, name: p.name, description: p.description })) ?? [],
+    };
 
     return [
       'Break up the document using the provided actions to store individual concepts',
@@ -72,6 +126,7 @@ export class Designer extends LLMSubsystem {
       'Avoid overlap in responsibility between phases',
       'Once every relevant concept has been acted on, you are done',
       'Start with the phases, then move on to the story elements',
+      `Current Phases: ${JSON.stringify(phases)}`,
       `Document:\n${document.content}`,
     ];
   }

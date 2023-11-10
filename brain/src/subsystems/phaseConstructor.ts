@@ -18,7 +18,51 @@ class FinalizePhase extends ReturnAction {
   required = ['parentPhase', 'name', 'description', 'procedure'];
 
   async payload(_worldId: string, parameters: Record<string, string>): Promise<SignalActionPayload> {
-    return { result: `Constructed phase ${parameters.name}` };
+    const worldRes = await sql`select * from worlds where id = ${this.thoughtProcess.world_id}`;
+    const world = worldRes[0];
+
+    let newPhases = { ...world.phases };
+
+    if (this.thoughtProcess.data.phaseIndex !== null) {
+      // replace the phase in place at the given index, where the index is the index of the phase across all parent phases (so if there are 2 phases in Pre-Play and 3 in Play, the index of the first phase in Play is 2)
+      let i = 0;
+      newPhases = Object.entries(newPhases).map(([parentPhase, phases]: any[]) => {
+        if (parentPhase === parameters.parentPhase) {
+          return [
+            parentPhase,
+            phases.map((phase: any) => {
+              if (i++ === this.thoughtProcess.data.phaseIndex) {
+                return {
+                  name: parameters.name,
+                  description: parameters.description,
+                  procedure: parameters.procedure,
+                };
+              }
+
+              return phase;
+            }),
+          ];
+        }
+
+        return [parentPhase, phases];
+      });
+    } else {
+      newPhases = {
+        ...newPhases,
+        [parameters.parentPhase]: [
+          ...(newPhases[parameters.parentPhase] ?? []),
+          {
+            name: parameters.name,
+            description: parameters.description,
+            procedure: parameters.procedure,
+          },
+        ],
+      };
+    }
+
+    await sql`update worlds set ${sql({ phases: newPhases })} where id = ${this.thoughtProcess.world_id}`;
+
+    return { result: `Updated phase ${parameters.name}` };
   }
 }
 
@@ -58,6 +102,7 @@ export class PhaseConstructor extends LLMSubsystem {
       data: {
         ...thoughtProcess.data,
         designDocumentId: message.payload.designDocumentId,
+        phaseIndex: message.payload.index ?? null,
       },
     })} where id = ${thoughtProcessId}`;
   }
