@@ -70,13 +70,17 @@ export abstract class Action {
   }
 
   serializeDefinition() {
-    return `${this.name}: ${this.description}. Parameters JSON Schema: ${JSON.stringify(
-      Object.fromEntries(
-        Object.entries(this.parameters).map(kv =>
-          this.required.includes(kv[0]) ? [kv[0], { ...kv[1], required: true }] : kv
-        )
-      )
-    )}`;
+    const schema = {
+      type: 'object',
+      required: this.required,
+      properties: this.parameters,
+    };
+
+    return {
+      name: this.name,
+      description: this.description,
+      parameters: schema,
+    };
   }
 
   protected async sendSignal(

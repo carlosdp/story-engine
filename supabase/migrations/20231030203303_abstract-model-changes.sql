@@ -31,3 +31,6 @@ create table stories (
 );
 
 alter table worlds add column phases jsonb not null default '{}'::jsonb;
+alter table thought_process_messages add column function_call jsonb;
+alter table thought_process_messages add column name varchar;
+alter table thought_process_messages alter column content drop not null;

@@ -3,7 +3,7 @@ import { sql } from '../db.js';
 import logger from '../logging.js';
 import { SubsystemMessage } from '../signal.js';
 import type { Database } from '../supabaseTypes.js';
-import { rawMessage } from '../utils.js';
+import { OpenAIFunctionDefinition, OpenAIMessage, rawMessage } from '../utils.js';
 
 export type ActionCommand = {
   thought: string;
@@ -173,19 +173,6 @@ export class Think {
   }
 }
 
-const ACTION_INSTRUCTIONS = `You have access to several actions to gather information and execute instructions:
-{actions}
-
-Based on the input, think about the next action to take. For example:
-
-{ "thought": "I need to do X", "action": "action name here", "parameters": {} }
-
-"parameters" must be a JSON object conforming to the action's Parameters JSON Schema.
-
-You can only perform the actions you have have been given. You must only respond in this thought/action format.
-
-Set "action" to null if the thought chain is complete (no further action needed)`;
-
 export abstract class LLMSubsystem extends Think {
   abstract actions: ActionConstructor[];
   abstract agentPurpose: string;
@@ -268,7 +255,7 @@ export abstract class LLMSubsystem extends Think {
   async prepareThoughtProcess(_thoughtProcessId: string, _message: SubsystemMessage): Promise<void> {}
 
   async processSignal(message: SubsystemMessage): Promise<string> {
-    const messages = [
+    const messages: OpenAIMessage[] = [
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
     ];
 
@@ -299,7 +286,7 @@ export abstract class LLMSubsystem extends Think {
   }
 
   async processSignalWithExistingThoughtProcess(thoughtProcessId: string, message: SubsystemMessage): Promise<string> {
-    const messages = [
+    const messages: OpenAIMessage[] = [
       { role: 'user', content: `${message.from_subsystem ?? 'Signal'}: ${JSON.stringify(message.payload)}` },
     ];
 
@@ -323,7 +310,9 @@ export abstract class LLMSubsystem extends Think {
     const actionRes = await sql`select * from thought_process_actions where id = ${completedActionId}`;
     const completedAction = actionRes[0];
 
-    const messages = [{ role: 'user', content: completedAction.result }];
+    const messages: OpenAIMessage[] = [
+      { role: 'function', name: completedAction.action, content: completedAction.result },
+    ];
 
     const thoughtProcessRes = await sql`select * from thought_processes where id = ${thoughtProcessId}`;
     this.thoughtProcess = thoughtProcessRes[0] as typeof this.thoughtProcess;
@@ -339,84 +328,91 @@ export abstract class LLMSubsystem extends Think {
     return thoughtProcessId;
   }
 
-  async processMessages(messages: { role: string; content: string }[]) {
+  async processMessages(messages: OpenAIMessage[]) {
     let attemptsLeft = 3;
-    const debugMessages: { role: string; content: string }[] = [];
-    let response: { role: string; content: string } = { role: 'system', content: 'No response' };
+    const debugMessages: OpenAIMessage[] = [];
+    let response: OpenAIMessage = { role: 'system', content: 'No response' };
 
     if (!this.thoughtProcess) {
       throw new Error('No thought process');
     }
 
     const baseMessage = await this.generateBaseMessage();
+    const actionFunctions = await this.actionFunctions();
 
     while (attemptsLeft > 0) {
       response = await rawMessage(
         this.model,
-        [baseMessage, ...messages, ...debugMessages, { role: 'system', content: 'Respond in pure JSON only' }],
+        [
+          baseMessage,
+          ...messages,
+          ...debugMessages,
+          { role: 'system', content: 'You must either call a function or respond "done"' },
+        ],
+        // todo: increase this
         400,
-        this.temperature
+        this.temperature,
+        actionFunctions
       );
-      logger.debug(response.content);
+      logger.debug(JSON.stringify(response));
 
-      let actionCommand: ActionCommand;
-
-      try {
-        actionCommand = JSON.parse(response.content) as ActionCommand;
-      } catch (error: any) {
-        logger.warn(`Invalid JSON: ${error.message}`);
-
-        debugMessages.push(response, {
-          role: 'system',
-          content: `Invalid JSON. Try again.`,
-        });
-
-        attemptsLeft -= 1;
-        continue;
-      }
-
-      if (!actionCommand.thought) {
-        logger.debug('No thought, invalid response');
-
-        debugMessages.push(response, {
-          role: 'system',
-          content: 'No thought detected. Follow instructions and try again.',
-        });
-
-        attemptsLeft -= 1;
-        continue;
-      }
-
-      if (!actionCommand.action || actionCommand.action === 'null') {
+      if (response.content === 'done') {
         logger.debug('No action, returning');
 
         await sql`update thought_processes set terminated_at = now() where id = ${this.thoughtProcess.id}`;
 
         return response;
-      }
-
-      const availableActions = await this.availableActions();
-      const action = availableActions[actionCommand.action];
-
-      if (!action) {
-        logger.warn(`Invalid action: ${actionCommand.action}`);
+      } else if (response.content !== null) {
+        logger.debug('No function call, invalid response');
 
         debugMessages.push(response, {
           role: 'system',
-          content: `Invalid action: ${actionCommand.action}. Use only available actions.`,
+          content: 'You must use a function call. Follow instructions and try again.',
         });
 
         attemptsLeft -= 1;
         continue;
       }
 
-      const validationResult = action.validate(actionCommand.parameters);
+      const availableActions = await this.availableActions();
+      const action = availableActions[response.function_call.name];
+
+      if (!action) {
+        logger.warn(`Invalid action: ${response.function_call.name}`);
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: `Invalid action: ${response.function_call.name}. Use only available actions.`,
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
+
+      let functionArgs: Record<string, unknown> = {};
+
+      try {
+        functionArgs = JSON.parse(response.function_call.arguments);
+      } catch (error: any) {
+        logger.warn(`Invalid JSON: ${error.message}`);
+
+        debugMessages.push(response, {
+          role: 'system',
+          content: `Invalid JSON. Try again. Error: ${error.message}`,
+        });
+
+        attemptsLeft -= 1;
+        continue;
+      }
+
+      const validationResult = action.validate(functionArgs);
 
       if (!validationResult.valid) {
         logger.warn(`Invalid parameters: ${JSON.stringify(validationResult.errors)}`);
 
         debugMessages.push(response, {
-          role: 'system',
+          role: 'function',
+          name: action.name,
           content: `Invalid action parameters: ${JSON.stringify(validationResult.errors)}. Follow the schema.`,
         });
 
@@ -424,7 +420,7 @@ export abstract class LLMSubsystem extends Think {
         continue;
       }
 
-      await action.queue(actionCommand.parameters);
+      await action.queue(functionArgs);
 
       break;
     }
@@ -434,7 +430,12 @@ export abstract class LLMSubsystem extends Think {
 
   private async compressMessages() {
     const messagesRes = await sql`select * from compressed_thought_process_messages(${this.thoughtProcess.id})`;
-    const characterCount = messagesRes.reduce((acc, message) => acc + message.content.length, 0);
+    // eslint-disable-next-line unicorn/no-array-reduce
+    const characterCount = messagesRes.reduce(
+      (acc, message) =>
+        message.content ? acc + message.content.length : acc + JSON.stringify(message.function_call).length,
+      0
+    );
 
     if (characterCount < this.compressionLimit) {
       return;
@@ -442,7 +443,7 @@ export abstract class LLMSubsystem extends Think {
 
     const messages = messagesRes
       .filter(message => !message.summary)
-      .map(message => ({ role: message.role, content: message.content }));
+      .map(message => ({ role: message.role, content: message.content, function_call: message.function_call }));
 
     if (messages.length === 0) {
       return;
@@ -475,30 +476,35 @@ export abstract class LLMSubsystem extends Think {
 
   private async generateBaseMessage() {
     const instructions = await this.instructions();
-    const actionsInstruction = ACTION_INSTRUCTIONS.replace(
-      '{actions}',
-      Object.values(await this.availableActions())
-        .map(action => action.serializeDefinition())
-        .join('\n')
-    );
-    const prompt = `${this.agentPurpose}\n\n${instructions.map(i => '- ' + i).join('\n')}\n\n${actionsInstruction}`;
+    const prompt = `${this.agentPurpose}\n\n${instructions.map(i => '- ' + i).join('\n')}`;
 
     return { role: 'system', content: prompt };
   }
 
-  private async saveMessages(thoughtProcessId: string, messages: { role: string; content: string }[]) {
+  private async actionFunctions(): Promise<OpenAIFunctionDefinition[]> {
+    return Object.values(await this.availableActions()).map(action => action.serializeDefinition());
+  }
+
+  private async saveMessages(thoughtProcessId: string, messages: OpenAIMessage[]) {
     await sql`insert into thought_process_messages ${sql(
       messages.map(message => ({
         thought_process_id: thoughtProcessId,
         role: message.role,
-        content: message.content,
+        content: message.content ?? null,
+        name: message.name ?? null,
+        function_call: message.function_call ?? null,
       }))
     )}`;
   }
 
   private async getMessages(thoughtProcessId: string) {
     const messagesRes = await sql`select * from compressed_thought_process_messages(${thoughtProcessId})`;
-    return messagesRes.map(message => ({ role: message.role, content: message.content }));
+    return messagesRes.map(message => ({
+      role: message.role,
+      content: message.content,
+      name: message.name ?? undefined,
+      function_call: message.function_call ?? undefined,
+    }));
   }
 }
 

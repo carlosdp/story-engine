@@ -3,12 +3,18 @@ import axiosRetry from 'axios-retry';
 
 import logger from './logging.js';
 
-export const message = async (
-  model: string,
-  messages: { role: string; content: string }[],
-  maxTokens: number,
-  temperature?: number
-) => {
+export type OpenAIMessage = { role: string; name?: string } & (
+  | { content: string; function_call?: null }
+  | { content: null; function_call: { name: string; arguments: any } }
+);
+
+export type OpenAIFunctionDefinition = {
+  name: string;
+  description: string;
+  parameters: any;
+};
+
+export const message = async (model: string, messages: OpenAIMessage[], maxTokens: number, temperature?: number) => {
   const client = axios.create({ baseURL: 'https://api.openai.com/v1' });
   axiosRetry(client, {
     retries: 5,
@@ -46,10 +52,11 @@ export const message = async (
 
 export const rawMessage = async (
   model: string,
-  messages: { role: string; content: string }[],
+  messages: OpenAIMessage[],
   maxTokens: number,
-  temperature?: number
-) => {
+  temperature?: number,
+  functions?: OpenAIFunctionDefinition[]
+): Promise<OpenAIMessage> => {
   const client = axios.create({ baseURL: 'https://api.openai.com/v1' });
   axiosRetry(client, {
     retries: 5,
@@ -68,6 +75,7 @@ export const rawMessage = async (
         messages,
         temperature: temperature || 0,
         max_tokens: maxTokens,
+        functions,
       },
       {
         headers: {
