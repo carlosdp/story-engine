@@ -1,8 +1,8 @@
-import { EntityBuilder } from '../subsystems/entityBuilder.js';
+import { PhaseExecutor } from '../subsystems/phaseExecutor.js';
 
-const subsystem = new EntityBuilder();
+const subsystem = new PhaseExecutor();
 await subsystem.createSignal('6d2cb791-703c-4ea4-afbf-a605fbad68b0', {
-  command: 'Create a new character for a player on the crew of the mining ship',
+  command: 'Start game',
 });
 
 // eslint-disable-next-line
