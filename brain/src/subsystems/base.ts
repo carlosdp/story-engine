@@ -347,16 +347,32 @@ export abstract class LLMSubsystem extends Think {
           baseMessage,
           ...messages,
           ...debugMessages,
-          { role: 'system', content: 'You must either call a function or respond "done"' },
+          {
+            role: 'system',
+            content:
+              'Perform the work requested using function calls. When there is nothing left to do, call the "Done" function',
+          },
         ],
         // todo: increase this
         400,
         this.temperature,
-        actionFunctions
+        [
+          ...actionFunctions,
+          {
+            name: 'Done',
+            description: 'No more work to do, terminate this thought process',
+            parameters: {
+              type: 'object',
+              properties: {
+                reason: { type: 'string', description: 'Reason for termination' },
+              },
+            },
+          },
+        ]
       );
       logger.debug(JSON.stringify(response));
 
-      if (response.content === 'done') {
+      if (response.content === 'done' || response.function_call?.name === 'Done') {
         logger.debug('No action, returning');
 
         await sql`update thought_processes set terminated_at = now() where id = ${this.thoughtProcess.id}`;

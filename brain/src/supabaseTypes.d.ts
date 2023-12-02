@@ -227,6 +227,44 @@ export interface Database {
           world_id?: string
         }
       }
+      entities: {
+        Row: {
+          change_history: string
+          classification: string
+          created_at: string
+          description: string
+          embedding: unknown
+          id: string
+          name: string
+          state: string
+          updated_at: string
+          world_id: string
+        }
+        Insert: {
+          change_history?: string
+          classification: string
+          created_at?: string
+          description: string
+          embedding: unknown
+          id?: string
+          name: string
+          state: string
+          updated_at?: string
+          world_id: string
+        }
+        Update: {
+          change_history?: string
+          classification?: string
+          created_at?: string
+          description?: string
+          embedding?: unknown
+          id?: string
+          name?: string
+          state?: string
+          updated_at?: string
+          world_id?: string
+        }
+      }
       job: {
         Row: {
           completedon: string | null
@@ -535,6 +573,35 @@ export interface Database {
           world_id?: string
         }
       }
+      rules: {
+        Row: {
+          created_at: string
+          description: string
+          embedding: unknown
+          id: string
+          plain: string
+          updated_at: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          embedding: unknown
+          id?: string
+          plain: string
+          updated_at?: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          embedding?: unknown
+          id?: string
+          plain?: string
+          updated_at?: string
+          world_id?: string
+        }
+      }
       scenarios: {
         Row: {
           created_at: string
@@ -619,6 +686,32 @@ export interface Database {
           payload?: Json
           response_to?: string | null
           subsystem?: string
+          world_id?: string
+        }
+      }
+      stories: {
+        Row: {
+          created_at: string
+          embedding: unknown
+          id: string
+          text: string
+          updated_at: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string
+          embedding: unknown
+          id?: string
+          text: string
+          updated_at?: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string
+          embedding?: unknown
+          id?: string
+          text?: string
+          updated_at?: string
           world_id?: string
         }
       }
@@ -745,27 +838,33 @@ export interface Database {
       }
       thought_process_messages: {
         Row: {
-          content: string
+          content: string | null
           created_at: string
+          function_call: Json | null
           id: string
+          name: string | null
           role: string
           summary: boolean | null
           thought_process_id: string
           updated_at: string
         }
         Insert: {
-          content: string
+          content?: string | null
           created_at?: string
+          function_call?: Json | null
           id?: string
+          name?: string | null
           role: string
           summary?: boolean | null
           thought_process_id: string
           updated_at?: string
         }
         Update: {
-          content?: string
+          content?: string | null
           created_at?: string
+          function_call?: Json | null
           id?: string
+          name?: string | null
           role?: string
           summary?: boolean | null
           thought_process_id?: string
@@ -831,6 +930,7 @@ export interface Database {
           description: string
           id: string
           name: string
+          phases: Json
           ready: boolean
           settings: Json
           state: Json
@@ -842,6 +942,7 @@ export interface Database {
           description: string
           id?: string
           name: string
+          phases?: Json
           ready?: boolean
           settings?: Json
           state?: Json
@@ -853,6 +954,7 @@ export interface Database {
           description?: string
           id?: string
           name?: string
+          phases?: Json
           ready?: boolean
           settings?: Json
           state?: Json
@@ -1007,6 +1109,22 @@ export interface Database {
         }
         Returns: undefined
       }
+      compressed_thought_process_messages: {
+        Args: {
+          thought_process_id: string
+        }
+        Returns: {
+          content: string | null
+          created_at: string
+          function_call: Json | null
+          id: string
+          name: string | null
+          role: string
+          summary: boolean | null
+          thought_process_id: string
+          updated_at: string
+        }[]
+      }
       create_scenario: {
         Args: {
           world_id: string
@@ -1026,6 +1144,7 @@ export interface Database {
           description: string
           id: string
           name: string
+          phases: Json
           ready: boolean
           settings: Json
           state: Json

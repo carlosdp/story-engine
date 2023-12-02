@@ -118,7 +118,7 @@ export class PhaseExecutor extends LLMSubsystem {
       'Based on the given event or user input, perform actions to execute the current phase',
       'If there is no current phase (the game has just started), start by advancing to the beginning phase',
       'If the current phase is complete or reached an end condition, advance to the next phase',
-      'If there is no next phase, end the game',
+      'Continue running the phases until you run into an end condition defined by the current phase',
       `Phases: ${JSON.stringify(phases)}`,
       `Current Phase: ${world.state.currentPhase ?? 'None'}`,
       `Document:\n${document.content}`,

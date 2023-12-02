@@ -12,6 +12,7 @@ import { ConversationList } from './screens/ConversationList.js';
 import { CreateGame } from './screens/CreateGame.js';
 import { CreateScenario } from './screens/CreateScenario.js';
 import { CreateWorld } from './screens/CreateWorld.js';
+import { GameChat } from './screens/GameChat.js';
 import { GenerateCharacters } from './screens/GenerateCharacters.js';
 import { GenerateLetter } from './screens/GenerateLetter.js';
 import { Login } from './screens/Login.js';
@@ -37,6 +38,7 @@ function App() {
         <Route element={<AuthenticatedRoutes />}>
           <Route path="/" element={<WorldDefault />} />
           <Route path="/worlds/create" element={<CreateWorld />} />
+          <Route path="/worlds/:worldId/chat" element={<GameChat />} />
           <Route path="/worlds/:worldId/scenarios" element={<Scenarios />} />
           <Route path="/worlds/:worldId/characters" element={<CharacterList />} />
           <Route path="/worlds/:worldId/scenarios/create" element={<CreateScenario />} />
