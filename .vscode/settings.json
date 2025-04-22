@@ -4,5 +4,9 @@
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "[typescriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
-  }
+  },
+  "deno.enablePaths": [
+    "./supabase/functions"
+  ],
+  "deno.importMap": "./supabase/functions/import_map.json"
 }

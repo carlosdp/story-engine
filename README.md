@@ -1,5 +1,10 @@
 # StoryWeaver
-This is the Story Weaver brain and control UI.
+This is the Story Weaver brain and control UI, for the [Whispering Fable](https://x.com/the_carlosdp/status/1649937143253352449) project. It was developed as a multi-agent architecture (before modern agent architectures were established) where a multitude of agent "subsystems" were orchestratd by an "overlord" agent, each using "thought processes" to track context for each concept or "task".
+
+## Screenshots
+
+![Thought Process](screenshots/screen1.png)
+![Overlord thoughts](screenshots/screen2.png)
 
 ## Local Development
 1. Start local Supabase by running `supabase start` (must have [Supabase CLI](https://supabase.com/docs/guides/cli/getting-started) installed)
